@@ -1,98 +1,74 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { useMemo, useCallback, useState  } from 'react';
+import { useFocusEffect } from 'expo-router';
+import StatCard from '../../components/StatCard';
+import LoadingScreen from '../../components/LoadingScreen';
+import { usePaymentStore } from '../../src/stores/paymentStore';
+import { useTranslation } from '../../src/i18n';
+import { useTheme } from '../../src/theme';
+import { formatCurrency } from '../../src/utils/formatters';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function Dashboard() {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const { stats, loadDashboardStats } = usePaymentStore();
+  const [refreshing, setRefreshing] = useState(false);
 
-export default function HomeScreen() {
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    header: { padding: 20, paddingTop: 12 },
+    greeting: { fontSize: 28, fontWeight: '800', color: colors.text },
+    subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
+    statsGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 12, gap: 12 },
+    section: { marginTop: 8, marginBottom: 16 },
+    sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginHorizontal: 20, marginBottom: 12 },
+    incomeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, marginHorizontal: 16, padding: 16, borderRadius: 14, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+    incomeInfo: { flex: 1 },
+    incomeLabel: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
+    incomeAmount: { fontSize: 24, fontWeight: '700', color: colors.text, marginTop: 2 },
+  }), [colors]);
+
+  const loadData = useCallback(async () => {
+    await loadDashboardStats();
+  }, [loadDashboardStats]);
+
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+
+  const onRefresh = async () => { setRefreshing(true); await loadData(); setRefreshing(false); };
+
+  if (!stats) return <LoadingScreen />;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <View style={styles.header}>
+        <Text style={styles.greeting}>{t('dashboard.title')}</Text>
+        <Text style={styles.subtitle}>{t('dashboard.subtitle')}</Text>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('dashboard.sectionTotals')}</Text>
+        <View style={styles.statsGrid}>
+          <StatCard title={t('dashboard.totalClients')} value={stats.totalClients} icon="people-outline" color={colors.primary} />
+          <StatCard title={t('dashboard.totalCollections')} value={stats.totalCollections} icon="folder-open-outline" color={colors.primary} />
+          <StatCard title={t('dashboard.totalPayments')} value={stats.totalPayments} icon="cash-outline" color={colors.primary} />
+        </View>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('dashboard.sectionPayments')}</Text>
+        <View style={styles.statsGrid}>
+          <StatCard title={t('dashboard.totalPaymentsSum')} value={formatCurrency(stats.totalPaymentsSum)} icon="card-outline" color={colors.success} />
+          <StatCard title={t('dashboard.totalPaidOut')} value={formatCurrency(stats.totalPaidOut)} icon="checkmark-circle-outline" color={colors.success} />
+          <StatCard title={t('dashboard.totalRemainder')} value={formatCurrency(stats.totalRemainder)} icon="alert-circle-outline" color={colors.warning} />
+        </View>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('dashboard.monthlyIncome')}</Text>
+        <View style={styles.incomeCard}>
+          <View style={styles.incomeInfo}>
+            <Text style={styles.incomeLabel}>{t('dashboard.thisMonth')}</Text>
+            <Text style={styles.incomeAmount}>{formatCurrency(stats.monthlyIncome)}</Text>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});

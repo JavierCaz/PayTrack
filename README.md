@@ -1,50 +1,114 @@
-# Welcome to your Expo app 👋
+# PayTrack
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Track installment-based payments and collections for your small business or personal finances.
 
-## Get started
+PayTrack helps you manage clients, create installment plans, record payments, and generate receipts — all on your device with no internet required.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- **Client management** — Add, edit, search, filter, and blacklist clients
+- **Collections & installment plans** — Create collections with custom installment schedules (number of payments, frequency, payment days)
+- **Payment tracking** — Record payments as paid, partial, or pending with automatic overdue detection
+- **Receipt generation** — Generate and share visual receipts as images
+- **Dashboard** — View summary statistics: totals, balances, monthly income, overdue/upcoming payments
+- **Multi-language** — English and Spanish (auto-detects device locale)
+- **Dark mode** — Light and dark themes with system-default or manual selection
+- **Backup & restore** — Export all data as JSON and import it back, including external app format support
+- **Cross-platform** — Works on iOS, Android, and Web
 
-2. Start the app
+## Tech Stack
 
-   ```bash
-   npx expo start
-   ```
+- **Framework:** React Native with [Expo SDK 54](https://docs.expo.dev/)
+- **Language:** TypeScript
+- **Routing:** [expo-router](https://docs.expo.dev/router/introduction/) (file-based routing)
+- **State Management:** [Zustand](https://github.com/pmndrs/zustand)
+- **Database:** SQLite via `expo-sqlite`
+- **Date Handling:** [dayjs](https://day.js.org/)
+- **UI:** Native components with `@expo/vector-icons` (Ionicons)
 
-In the output, you'll find options to open the app in a
+## Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [Node.js](https://nodejs.org/) (LTS recommended)
+- npm or yarn
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting Started
 
 ```bash
-npm run reset-project
+# Clone the repository
+git clone https://github.com/javiercaz/paytrack.git
+cd paytrack
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Platform-specific
 
-## Learn more
+```bash
+npm run android    # Run on Android emulator/device
+npm run ios        # Run on iOS Simulator (macOS only)
+npm run web        # Run in a web browser
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Scripts
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+| Script | Description |
+| --- | --- |
+| `npm start` | Start Expo dev server |
+| `npm run android` | Start with Android |
+| `npm run ios` | Start with iOS |
+| `npm run web` | Start with web |
+| `npm run lint` | Run ESLint |
 
-## Join the community
+## Project Structure
 
-Join our community of developers creating universal apps.
+```
+app/                     # File-based routes (expo-router)
+  (tabs)/                # Bottom tab navigation
+  clients/               # Client CRUD screens
+  collections/           # Collection CRUD screens
+  payments/              # Payment recording screens
+  receipts/              # Receipt view & share
+  settings.tsx           # Settings screen
+components/              # Reusable UI components
+src/
+  database/              # SQLite schema and connection
+  services/              # Business logic (CRUD, backup, receipts)
+  stores/                # Zustand state stores
+  i18n/                  # English and Spanish translations
+  theme/                 # Light/dark theme configuration
+  types/                 # TypeScript interfaces
+  utils/                 # Formatters and date utilities
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Configuration
+
+No environment variables or external services are required. The app is fully self-contained with a local SQLite database.
+
+App settings (appearance, language) are configured in-app via the Settings screen.
+
+## Building for Production
+
+For native builds, use [EAS Build](https://docs.expo.dev/build/introduction/):
+
+```bash
+npx eas build --platform all
+```
+
+Web builds use Expo's static output and can be deployed to any static hosting:
+
+```bash
+npx expo export --platform web
+```
+
+## Contributing
+
+Contributions are welcome! Feel free to open issues or submit pull requests.
+
+## License
+
+[MIT](LICENSE)

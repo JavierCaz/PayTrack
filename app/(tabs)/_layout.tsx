@@ -1,33 +1,54 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Tabs, router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { TouchableOpacity } from 'react-native';
+import { useMemo } from 'react';
+import { useTranslation } from '../../src/i18n';
+import { useTheme } from '../../src/theme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+
+  const tabBarStyle = useMemo(() => ({
+    backgroundColor: colors.tabBarBg,
+    borderTopColor: colors.tabBarBorder,
+    borderTopWidth: 1,
+    paddingBottom: 8,
+    paddingTop: 8,
+    height: 60,
+  }), [colors]);
+
+  const headerStyle = useMemo(() => ({ backgroundColor: colors.headerBg }), [colors]);
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarStyle,
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        headerStyle,
+        headerTintColor: colors.primary,
+        headerTitleStyle: { fontWeight: '700', color: colors.text },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: t('tabs.dashboard'),
+          tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
+          headerRight: () => (
+            <TouchableOpacity onPress={() => router.push('/settings')} style={{ marginRight: 16 }}>
+              <Ionicons name="settings-outline" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="clients"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: t('tabs.clients'),
+          tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} />,
         }}
       />
     </Tabs>
