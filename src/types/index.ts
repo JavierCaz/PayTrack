@@ -63,6 +63,11 @@ export interface DashboardStats {
   overdueCollections: number;
   totalOutstanding: number;
   monthlyIncome: number;
+  todayIncome: number;
+  weekIncome: number;
+  yearIncome: number;
+  activeClients: number;
+  blacklistedClients: number;
 }
 
 export interface MonthlyIncome {

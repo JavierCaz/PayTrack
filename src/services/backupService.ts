@@ -94,15 +94,12 @@ async function importExternalFormat(data: any): Promise<void> {
     }
 
     // Refresh collection statuses based on imported payments
-    const allColls = await db.getAllAsync('SELECT id FROM collections');
+    const allColls = await db.getAllAsync('SELECT id, total_price FROM collections');
     for (const coll of allColls as any[]) {
-      await db.runAsync(`UPDATE collections SET status = CASE
-        WHEN (SELECT COUNT(*) FROM payments WHERE collection_id = ? AND status = 'pending') = 0
-          AND (SELECT COUNT(*) FROM payments WHERE collection_id = ?) > 0 THEN 'completed'
-        WHEN (SELECT COUNT(*) FROM payments WHERE collection_id = ? AND status = 'overdue') > 0 THEN 'overdue'
-        ELSE 'active'
-      END, updated_at = ? WHERE id = ?`,
-        [coll.id, coll.id, coll.id, nowISO(), coll.id]);
+      const totalPaid = await db.getFirstAsync<any>(
+        'SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE collection_id = ?', [coll.id]);
+      const status = totalPaid?.total >= coll.total_price ? 'completed' : 'active';
+      await db.runAsync('UPDATE collections SET status = ?, updated_at = ? WHERE id = ?', [status, nowISO(), coll.id]);
     }
   });
 }

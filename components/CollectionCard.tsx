@@ -12,15 +12,13 @@ interface CollectionCardProps {
   paidAmount: number;
   remainingBalance: number;
   status: string;
-  paidCount: number;
-  totalCount: number;
   onPress: () => void;
 }
 
-export default function CollectionCard({ productName, clientName, totalPrice, paidAmount, remainingBalance, status, paidCount, totalCount, onPress }: CollectionCardProps) {
+export default function CollectionCard({ productName, clientName, totalPrice, paidAmount, remainingBalance, status, onPress }: CollectionCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const progress = totalCount > 0 ? (paidCount / totalCount) * 100 : 0;
+  const progress = totalPrice > 0 ? (paidAmount / totalPrice) * 100 : 0;
   const statusColor = status === 'active' ? colors.statusActive : status === 'completed' ? colors.statusCompleted : colors.statusOverdue;
 
   const styles = useMemo(() => StyleSheet.create({
@@ -60,7 +58,7 @@ export default function CollectionCard({ productName, clientName, totalPrice, pa
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%`, backgroundColor: statusColor }]} />
         </View>
-        <Text style={styles.progressText}>{paidCount}/{totalCount}</Text>
+        <Text style={styles.progressText}>{formatCurrency(paidAmount)} / {formatCurrency(totalPrice)}</Text>
       </View>
       <View style={styles.footer}>
         <View>

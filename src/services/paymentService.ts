@@ -88,11 +88,24 @@ export async function getDashboardStats(): Promise<{
   totalClients: number; totalCollections: number; totalPayments: number;
   totalPaymentsSum: number; totalPaidOut: number; totalRemainder: number;
   activeCollections: number; completedCollections: number; overdueCollections: number;
-  totalOutstanding: number; monthlyIncome: number;
+  totalOutstanding: number; monthlyIncome: number; todayIncome: number; weekIncome: number; yearIncome: number;
+  activeClients: number; blacklistedClients: number;
 }> {
   return dbQuery(async (db) => {
-    const monthStartStr = new Date(new Date().setDate(1)).toISOString().split('T')[0];
-    const monthEndStr = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const monthStartStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const monthEndStr = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    const yearStartStr = `${now.getFullYear()}-01-01`;
+    const yearEndStr = `${now.getFullYear()}-12-31`;
+    const dayOfWeek = now.getDay();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+    const weekStartStr = weekStart.toISOString().split('T')[0];
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const weekEndStr = weekEnd.toISOString().split('T')[0];
+
     const totalClients = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM clients");
     const totalCollections = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections");
     const totalPayments = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM payments");
@@ -103,14 +116,36 @@ export async function getDashboardStats(): Promise<{
     const overdueColl = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections WHERE status = 'overdue'");
     const outstanding = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(c.total_price - COALESCE(paid.paid, 0)), 0) as total FROM collections c LEFT JOIN (SELECT collection_id, SUM(paid_amount) as paid FROM payments GROUP BY collection_id) paid ON paid.collection_id = c.id WHERE c.status != 'completed'`);
     const monthlyIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE paid_date >= ? AND paid_date <= ?`, [monthStartStr, monthEndStr]);
+    const todayIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE paid_date = ?`, [todayStr]);
+    const weekIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE paid_date >= ? AND paid_date <= ?`, [weekStartStr, weekEndStr]);
+    const yearIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE paid_date >= ? AND paid_date <= ?`, [yearStartStr, yearEndStr]);
     const globalRemainder = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(c.total_price - COALESCE(paid.paid, 0)), 0) as total FROM collections c LEFT JOIN (SELECT collection_id, SUM(paid_amount) as paid FROM payments GROUP BY collection_id) paid ON paid.collection_id = c.id`);
+    const activeClients = await db.getFirstAsync<any>(
+      `SELECT COUNT(*) as count FROM (
+        SELECT c.id
+        FROM clients c
+        LEFT JOIN (
+          SELECT col.id, col.client_id, col.total_price,
+            COALESCE(SUM(p.paid_amount), 0) as total_paid
+          FROM collections col
+          LEFT JOIN payments p ON p.collection_id = col.id AND p.status = 'paid'
+          GROUP BY col.id
+        ) col ON col.client_id = c.id
+        WHERE c.blacklisted = 0
+        GROUP BY c.id
+        HAVING COALESCE(SUM(col.total_price), 0) - COALESCE(SUM(col.total_paid), 0) > 0
+      )`
+    );
+    const blacklistedClients = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM clients WHERE blacklisted = 1");
     return {
       totalClients: totalClients?.count || 0, totalCollections: totalCollections?.count || 0,
       totalPayments: totalPayments?.count || 0, totalPaymentsSum: paymentsSum?.total || 0,
       totalPaidOut: paidOut?.total || 0, totalRemainder: globalRemainder?.total || 0,
       activeCollections: activeColl?.count || 0, completedCollections: completedColl?.count || 0,
       overdueCollections: overdueColl?.count || 0, totalOutstanding: outstanding?.total || 0,
-      monthlyIncome: monthlyIncome?.total || 0,
+      monthlyIncome: monthlyIncome?.total || 0, todayIncome: todayIncome?.total || 0,
+      weekIncome: weekIncome?.total || 0, yearIncome: yearIncome?.total || 0,
+      activeClients: activeClients?.count || 0, blacklistedClients: blacklistedClients?.count || 0,
     };
   });
 }

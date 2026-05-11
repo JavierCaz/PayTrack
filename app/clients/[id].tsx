@@ -123,7 +123,7 @@ export default function ClientDetailScreen() {
         {filteredCollections.length === 0
           ? <EmptyState icon="folder-open-outline" title={t('clients.noCollections')} subtitle={t('clients.noCollectionsDesc')} />
           : filteredCollections.map((col) => (
-              <CollectionCard key={col.id} productName={col.productName} totalPrice={col.totalPrice} paidAmount={col.paidAmount} remainingBalance={col.remainingBalance} status={col.status} paidCount={col.paidCount} totalCount={col.totalCount} onPress={() => router.push(`/collections/${col.id}`)} />
+              <CollectionCard key={col.id} productName={col.productName} totalPrice={col.totalPrice} paidAmount={col.paidAmount} remainingBalance={col.remainingBalance} status={col.status} onPress={() => router.push(`/collections/${col.id}`)} />
             ))
         }
         <View style={{height: 40 }} />

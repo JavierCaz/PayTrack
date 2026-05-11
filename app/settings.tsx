@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { useMemo } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert, Switch } from 'react-native';
+import { useMemo, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Alert, Switch, ActivityIndicator, Modal } from 'react-native';
 import { useTranslation } from '../src/i18n';
 import { exportBackup, importBackup } from '../src/services/backupService';
 import { useTheme } from '../src/theme';
@@ -9,6 +9,7 @@ import { useTheme } from '../src/theme';
 export default function SettingsScreen() {
   const { t, locale, setLocale } = useTranslation();
   const { colors, isDark, setDarkMode } = useTheme();
+  const [importing, setImporting] = useState(false);
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background, paddingTop: 16 },
@@ -20,14 +21,21 @@ export default function SettingsScreen() {
     optionTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
     optionDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 1 },
     toggleLabel: { fontSize: 16, fontWeight: '600', color: colors.text },
+    overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
+    overlayBox: { backgroundColor: colors.card, borderRadius: 16, padding: 32, alignItems: 'center', gap: 12, minWidth: 160 },
+    overlayText: { fontSize: 16, color: colors.text, fontWeight: '600' },
   }), [colors]);
 
   const handleExport = async () => { await exportBackup(); };
   const handleImport = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: 'application/json', copyToCacheDirectory: true });
-      if (!result.canceled && result.assets?.[0]?.uri) await importBackup(result.assets[0].uri);
-    } catch (e) { console.error('Import failed:', e); }
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        setImporting(true);
+        await importBackup(result.assets[0].uri);
+        setImporting(false);
+      }
+    } catch (e) { setImporting(false); console.error('Import failed:', e); }
   };
 
   return (
@@ -121,6 +129,14 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
+      <Modal visible={importing} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.overlayBox}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.overlayText}>{t('common.loading')}</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
