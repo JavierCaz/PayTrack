@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Collection } from '../types';
+import { Collection, type RecurrenceConfig } from '../types';
 import * as collectionService from '../services/collectionService';
 
 interface CollectionState {
@@ -17,7 +17,7 @@ interface CollectionState {
     totalPrice: number;
     numInstallments: number;
     paymentsPerMonth: number;
-    paymentDays: number[];
+    recurrence: RecurrenceConfig;
     startDate: string;
     installmentAmount?: number | null;
   }) => Promise<string>;
@@ -26,7 +26,7 @@ interface CollectionState {
     totalPrice?: number;
     numInstallments?: number;
     paymentsPerMonth?: number;
-    paymentDays?: number[];
+    recurrence?: RecurrenceConfig;
     startDate?: string;
     installmentAmount?: number | null;
     status?: string;

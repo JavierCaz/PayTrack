@@ -1,14 +1,14 @@
-import { View, FlatList, RefreshControl, TouchableOpacity, StyleSheet } from 'react-native';
-import { useMemo, useCallback, useState  } from 'react';
-import { useFocusEffect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ClientCard from '../../components/ClientCard';
-import SearchBar from '../../components/SearchBar';
-import FilterChips from '../../components/FilterChips';
 import EmptyState from '../../components/EmptyState';
+import FilterChips from '../../components/FilterChips';
 import LoadingScreen from '../../components/LoadingScreen';
-import { useClientStore } from '../../src/stores/clientStore';
+import SearchBar from '../../components/SearchBar';
 import { useTranslation } from '../../src/i18n';
+import { useClientStore } from '../../src/stores/clientStore';
 import { useTheme } from '../../src/theme';
 
 export default function ClientsScreen() {

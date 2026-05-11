@@ -6,8 +6,23 @@ export interface Client {
   notes: string;
   blacklisted: boolean;
   blacklistNote: string;
+  defaultRecurrence: RecurrenceConfig | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type RecurrenceType = 'monthly' | 'weekly' | 'monthly_weekday';
+
+export interface WeekdayOccurrence {
+  week: number;
+  day: number;
+}
+
+export interface RecurrenceConfig {
+  type: RecurrenceType;
+  monthDays: number[];
+  weekDays: number[];
+  monthWeekday: WeekdayOccurrence[];
 }
 
 export interface Collection {
@@ -18,11 +33,30 @@ export interface Collection {
   numInstallments: number;
   paymentsPerMonth: number;
   paymentDays: number[];
+  recurrence: RecurrenceConfig;
   startDate: string;
   installmentAmount: number | null;
   status: 'active' | 'completed' | 'overdue';
   createdAt: string;
   updatedAt: string;
+}
+
+export function getDefaultRecurrence(): RecurrenceConfig {
+  return { type: 'monthly', monthDays: [1, 15], weekDays: [], monthWeekday: [] };
+}
+
+export function serializeRecurrence(r: RecurrenceConfig): string {
+  return JSON.stringify(r);
+}
+
+export function parseRecurrence(str: string): RecurrenceConfig {
+  if (!str) return getDefaultRecurrence();
+  if (str.startsWith('{')) {
+    try { return JSON.parse(str); }
+    catch { return getDefaultRecurrence(); }
+  }
+  const days = str.split(',').map(Number).filter(d => !isNaN(d));
+  return { type: 'monthly', monthDays: days.length > 0 ? days : [1, 15], weekDays: [], monthWeekday: [] };
 }
 
 export interface Payment {

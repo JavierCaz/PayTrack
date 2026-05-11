@@ -128,6 +128,7 @@ export async function initDatabase(): Promise<void> {
     // Migrations for new columns added after initial schema
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN blacklisted INTEGER DEFAULT 0'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN blacklist_note TEXT DEFAULT \'\''); } catch (_) {}
+    try { await database.runAsync('ALTER TABLE clients ADD COLUMN default_recurrence TEXT'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE collections ADD COLUMN installment_amount REAL'); } catch (_) {}
   });
 }

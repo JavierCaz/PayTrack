@@ -1,5 +1,5 @@
 import { dbQuery, withTransaction, type SQLiteDatabase } from '../database/database';
-import { Collection as CollectionRow, generateId, nowISO } from '../types';
+import { Collection as CollectionRow, generateId, nowISO, type RecurrenceConfig, parseRecurrence, serializeRecurrence } from '../types';
 
 interface CollectionData {
   clientId: string;
@@ -7,7 +7,7 @@ interface CollectionData {
   totalPrice: number;
   numInstallments: number;
   paymentsPerMonth: number;
-  paymentDays: number[];
+  recurrence: RecurrenceConfig;
   startDate: string;
   installmentAmount?: number | null;
 }
@@ -20,6 +20,7 @@ export interface CollectionWithMeta extends CollectionRow {
 }
 
 function rowToCollection(row: any): CollectionRow {
+  const recurrence = parseRecurrence(row.payment_days || '1,15');
   return {
     id: row.id,
     clientId: row.client_id,
@@ -27,7 +28,8 @@ function rowToCollection(row: any): CollectionRow {
     totalPrice: row.total_price,
     numInstallments: row.num_installments,
     paymentsPerMonth: row.payments_per_month,
-    paymentDays: (row.payment_days || '1,15').split(',').map(Number),
+    paymentDays: recurrence.type === 'monthly' ? recurrence.monthDays : [],
+    recurrence,
     startDate: row.start_date,
     installmentAmount: row.installment_amount ?? null,
     status: row.status,
@@ -99,7 +101,7 @@ export async function createCollection(data: CollectionData): Promise<string> {
   return withTransaction(async (db) => {
     const id = generateId();
     const now = nowISO();
-    const paymentDaysStr = data.paymentDays.join(',');
+    const paymentDaysStr = serializeRecurrence(data.recurrence);
     await db.runAsync(
       `INSERT INTO collections (id, client_id, product_name, total_price, num_installments, payments_per_month, payment_days, start_date, installment_amount, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
@@ -109,7 +111,7 @@ export async function createCollection(data: CollectionData): Promise<string> {
   });
 }
 
-export async function updateCollection(id: string, data: { productName?: string; totalPrice?: number; numInstallments?: number; paymentsPerMonth?: number; paymentDays?: number[]; startDate?: string; installmentAmount?: number | null; status?: string }): Promise<void> {
+export async function updateCollection(id: string, data: { productName?: string; totalPrice?: number; numInstallments?: number; paymentsPerMonth?: number; recurrence?: RecurrenceConfig; startDate?: string; installmentAmount?: number | null; status?: string }): Promise<void> {
   return withTransaction(async (db) => {
     const now = nowISO();
     const sets: string[] = [];
@@ -118,7 +120,7 @@ export async function updateCollection(id: string, data: { productName?: string;
     if (data.totalPrice !== undefined) { sets.push('total_price = ?'); values.push(data.totalPrice); }
     if (data.numInstallments !== undefined) { sets.push('num_installments = ?'); values.push(data.numInstallments); }
     if (data.paymentsPerMonth !== undefined) { sets.push('payments_per_month = ?'); values.push(data.paymentsPerMonth); }
-    if (data.paymentDays !== undefined) { sets.push('payment_days = ?'); values.push(data.paymentDays.join(',')); }
+    if (data.recurrence !== undefined) { sets.push('payment_days = ?'); values.push(serializeRecurrence(data.recurrence)); }
     if (data.startDate !== undefined) { sets.push('start_date = ?'); values.push(data.startDate); }
     if (data.installmentAmount !== undefined) { sets.push('installment_amount = ?'); values.push(data.installmentAmount); }
     if (data.status !== undefined) { sets.push('status = ?'); values.push(data.status); }

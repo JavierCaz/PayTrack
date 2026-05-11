@@ -11,6 +11,7 @@ import { usePaymentStore } from '../../src/stores/paymentStore';
 import { useTheme } from '../../src/theme';
 import { formatDate } from '../../src/utils/dateUtils';
 import { formatCurrency } from '../../src/utils/formatters';
+import type { RecurrenceConfig } from '../../src/types';
 
 export default function CollectionDetailScreen() {
   const { t } = useTranslation();
@@ -66,6 +67,12 @@ export default function CollectionDetailScreen() {
     ]);
   };
 
+  const getFrequencyLabel = (rec: RecurrenceConfig, count: number) => {
+    if (rec.type === 'weekly') return t('collection.weeklyLabel', { count });
+    if (rec.type === 'monthly_weekday') return t('collection.weekdayLabel', { count });
+    return t('collection.xPerMonth', { count });
+  };
+
   if (loading) return <LoadingScreen />;
   if (!collection) return <EmptyState icon="alert-circle" title={t('collection.notFound')} />;
 
@@ -103,7 +110,7 @@ export default function CollectionDetailScreen() {
         <View style={styles.infoRow}>
           <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.startDateLabel')}</Text><Text style={styles.infoValue}>{formatDate(collection.startDate)}</Text></View>
           <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.installmentsLabel')}</Text><Text style={styles.infoValue}>{collection.numInstallments}</Text></View>
-          <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.frequency')}</Text><Text style={styles.infoValue}>{t('collection.xPerMonth', { count: collection.paymentsPerMonth })}</Text></View>
+          <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.frequency')}</Text><Text style={styles.infoValue}>{getFrequencyLabel(collection.recurrence, collection.paymentsPerMonth)}</Text></View>
         </View>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('collection.payments')} ({payments.length})</Text>

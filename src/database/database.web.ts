@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS clients (
   notes TEXT DEFAULT '',
   blacklisted INTEGER DEFAULT 0,
   blacklist_note TEXT DEFAULT '',
+  default_recurrence TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

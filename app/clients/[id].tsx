@@ -6,6 +6,7 @@ import CollectionCard from '../../components/CollectionCard';
 import EmptyState from '../../components/EmptyState';
 import LoadingScreen from '../../components/LoadingScreen';
 import SearchBar from '../../components/SearchBar';
+import FilterChips from '../../components/FilterChips';
 import { useTranslation } from '../../src/i18n';
 import { useClientStore } from '../../src/stores/clientStore';
 import { useCollectionStore } from '../../src/stores/collectionStore';
@@ -21,6 +22,7 @@ export default function ClientDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [blacklistModalVisible, setBlacklistModalVisible] = useState(false);
   const [blacklistNote, setBlacklistNote] = useState('');
 
@@ -53,11 +55,12 @@ export default function ClientDetailScreen() {
   }), [colors]);
 
   const client = allClients.find(c => c.id === id) || clients.find(c => c.id === id);
-  const filteredCollections = useMemo(() =>
-    searchQuery
-      ? collections.filter(c => c.productName.toLowerCase().includes(searchQuery.toLowerCase()))
-      : collections
-  , [collections, searchQuery]);
+  const filteredCollections = useMemo(() => {
+    let result = collections;
+    if (filterStatus !== 'all') result = result.filter(c => c.status === filterStatus);
+    if (searchQuery) result = result.filter(c => c.productName.toLowerCase().includes(searchQuery.toLowerCase()));
+    return result;
+  }, [collections, searchQuery, filterStatus]);
   const loadData = useCallback(async () => {
     if (!id) return;
     setCollections(await loadClientCollectionsWithMeta(id));
@@ -119,6 +122,7 @@ export default function ClientDetailScreen() {
           )}
         </View>
         <View style={styles.section}><Text style={styles.sectionTitle}>{t('clients.collections')} ({filteredCollections.length})</Text></View>
+        <FilterChips options={[{ label: t('status.all'), value: 'all' }, { label: t('status.active'), value: 'active' }, { label: t('status.completed'), value: 'completed' }]} selected={filterStatus} onSelect={setFilterStatus} />
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder={t('clients.searchCollectionPlaceholder')} />
         {filteredCollections.length === 0
           ? <EmptyState icon="folder-open-outline" title={t('clients.noCollections')} subtitle={t('clients.noCollectionsDesc')} />

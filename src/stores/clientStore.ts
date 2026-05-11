@@ -11,7 +11,7 @@ interface ClientState {
   setSearchQuery: (query: string) => void;
   setFilterStatus: (status: string) => void;
   loadClients: () => Promise<void>;
-  addClient: (data: { name: string; phone?: string; email?: string; notes?: string }) => Promise<string>;
+  addClient: (data: { name: string; phone?: string; email?: string; notes?: string; defaultRecurrence?: import('../types').RecurrenceConfig | null }) => Promise<string>;
   updateClient: (id: string, data: Partial<Client>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
   blacklistClient: (id: string, note: string) => Promise<void>;

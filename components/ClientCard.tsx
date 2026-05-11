@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Client } from '../src/types';
 import { useMemo } from 'react';
-import { useTheme } from '../src/theme';
-import { formatCurrency } from '../src/utils/formatters';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { CollectionStatus } from '../src/services/clientService';
+import { useTheme } from '../src/theme';
+import { Client } from '../src/types';
+import { formatCurrency } from '../src/utils/formatters';
 
 interface ClientCardProps {
   client: Client;
@@ -28,7 +28,7 @@ export default function ClientCard({ client, onPress, totalCollections = 0, coll
     statusIndicator: { width: 10, height: 10, borderRadius: 5 },
   }), [colors]);
 
-  const statusColor = collectionStatus === 'settled' ? '#22C55E' : collectionStatus === 'active' ? '#EF4444' : colors.textTertiary;
+  const statusColor = collectionStatus === 'settled' ? '#22C55E' : collectionStatus === 'active' ? '#ef9a44' : colors.textTertiary;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
