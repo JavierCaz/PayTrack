@@ -63,6 +63,10 @@ npm run web        # Run in a web browser
 | `npm run ios` | Start with iOS |
 | `npm run web` | Start with web |
 | `npm run lint` | Run ESLint |
+| `npm run version` | Bump app version (prompts for patch/minor/major) |
+| `npm run build:android` | Bump version + build Android (production AAB) |
+| `npm run build:ios` | Bump version + build iOS (production) |
+| `npm run build:all` | Bump version + build both platforms |
 
 ## Project Structure
 
@@ -93,13 +97,44 @@ App settings (appearance, language) are configured in-app via the Settings scree
 
 ## Building for Production
 
-For native builds, use [EAS Build](https://docs.expo.dev/build/introduction/):
+For native builds, use [EAS Build](https://docs.expo.dev/build/introduction/).
+
+### Version bump before building
+
+Before triggering a build, bump the app version interactively:
 
 ```bash
-npx eas build --platform all
+npx expo-version
 ```
 
-Web builds use Expo's static output and can be deployed to any static hosting:
+This updates both `app.json` and `package.json`, then creates a git commit and tag.
+
+### Preview APK (testing & sharing)
+
+Build an installable APK to test on your Android device or share with others before publishing:
+
+```bash
+npx expo-version && eas build --platform android --profile preview
+```
+
+EAS will generate a shareable download link — no Play Store required.
+
+### Production build
+
+```bash
+# Production AAB (Google Play Store)
+npx expo-version && eas build --platform android
+
+# Production IPA (Apple App Store)
+npx expo-version && eas build --platform ios
+
+# Both platforms
+npx expo-version && eas build --platform all
+```
+
+### Web build
+
+Expo's static output can be deployed to any static hosting:
 
 ```bash
 npx expo export --platform web

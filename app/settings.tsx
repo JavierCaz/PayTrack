@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import * as DocumentPicker from 'expo-document-picker';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Alert, Switch, ActivityIndicator, Modal } from 'react-native';
@@ -8,6 +9,7 @@ import { useTheme } from '../src/theme';
 
 export default function SettingsScreen() {
   const { t, locale, setLocale } = useTranslation();
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
   const { colors, isDark, setDarkMode } = useTheme();
   const [importing, setImporting] = useState(false);
 
@@ -125,7 +127,7 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.optionInfo}>
             <Text style={styles.optionTitle}>PayTrack</Text>
-            <Text style={styles.optionDesc}>{t('settings.version')}</Text>
+            <Text style={styles.optionDesc}>{t('settings.version', { version: appVersion })}</Text>
           </View>
         </View>
       </View>

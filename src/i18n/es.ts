@@ -35,7 +35,7 @@ const es: Translation = {
   'settings.importBackup': 'Importar Respaldo',
   'settings.importDesc': 'Restaurar datos desde un archivo JSON',
   'settings.about': 'Acerca de',
-  'settings.version': 'Versión 1.0.0',
+  'settings.version': 'Versión {version}',
   'settings.language': 'Idioma',
   'settings.english': 'Inglés',
   'settings.spanish': 'Español',

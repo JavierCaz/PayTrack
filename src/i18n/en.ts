@@ -33,7 +33,7 @@ const en = {
   'settings.importBackup': 'Import Backup',
   'settings.importDesc': 'Restore data from a JSON file',
   'settings.about': 'About',
-  'settings.version': 'Version 1.0.0',
+  'settings.version': 'Version {version}',
   'settings.language': 'Language',
   'settings.english': 'English',
   'settings.spanish': 'Spanish',
