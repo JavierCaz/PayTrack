@@ -27,6 +27,7 @@ export type CollectionStatus = 'none' | 'active' | 'settled';
 export interface ClientWithTotal extends ClientRow {
   totalCollections: number;
   collectionStatus: CollectionStatus;
+  isPending: boolean;
 }
 
 function rowToClientWithTotal(row: any): ClientWithTotal {
@@ -34,7 +35,45 @@ function rowToClientWithTotal(row: any): ClientWithTotal {
     ...rowToClient(row),
     totalCollections: row.total_collections || 0,
     collectionStatus: row.collection_status || 'none',
+    isPending: false,
   };
+}
+
+async function getPendingClientIds(db: any): Promise<Set<string>> {
+  const rows = await db.getAllAsync(
+    `SELECT col.client_id, col.payment_days, col.payments_per_month,
+      (SELECT MAX(paid_date) FROM payments WHERE collection_id = col.id) as last_paid_date
+    FROM collections col WHERE col.status = 'active'`
+  );
+
+  const pendingClients = new Set<string>();
+  const today = new Date();
+  const currentDay = today.getDate();
+
+  for (const row of rows) {
+    const paymentDays = row.payment_days.split(',').map(Number).sort((a: number, b: number) => a - b);
+    const selectedDays = paymentDays.slice(0, row.payments_per_month);
+
+    const mostRecentDay = [...selectedDays].reverse().find((d: number) => d <= currentDay);
+
+    let expectedDate: Date;
+    if (mostRecentDay !== undefined) {
+      expectedDate = new Date(today.getFullYear(), today.getMonth(), mostRecentDay);
+    } else {
+      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDayOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+      const lastMonthDay = [...selectedDays].reverse().find((d: number) => d <= lastDayOfLastMonth);
+      if (lastMonthDay === undefined) continue;
+      expectedDate = new Date(today.getFullYear(), today.getMonth() - 1, lastMonthDay);
+    }
+
+    const expectedDateStr = expectedDate.toISOString().split('T')[0];
+    if (!row.last_paid_date || row.last_paid_date < expectedDateStr) {
+      pendingClients.add(row.client_id);
+    }
+  }
+
+  return pendingClients;
 }
 
 export async function getClients(search?: string): Promise<ClientWithTotal[]> {
@@ -58,7 +97,9 @@ export async function getClients(search?: string): Promise<ClientWithTotal[]> {
     const query = [select, from, where, groupOrder].filter(Boolean).join(' ');
     const params = search ? [`%${search}%`] : [];
     const rows = await db.getAllAsync(query, params);
-    return rows.map(rowToClientWithTotal);
+    const clients = rows.map(rowToClientWithTotal);
+    const pendingIds = await getPendingClientIds(db);
+    return clients.map(c => ({ ...c, isPending: pendingIds.has(c.id) }));
   });
 }
 

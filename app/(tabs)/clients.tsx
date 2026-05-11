@@ -18,6 +18,7 @@ export default function ClientsScreen() {
 
   const filterOptions = useMemo(() => [
     { label: t('clients.filterAll'), value: 'all' },
+    { label: t('clients.filterPending'), value: 'pending' },
     { label: t('clients.filterActive'), value: 'active' },
     { label: t('clients.filterSettled'), value: 'settled' },
     { label: t('clients.filterBlacklist'), value: 'blacklist' },

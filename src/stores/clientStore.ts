@@ -22,6 +22,7 @@ interface ClientState {
 function applyFilter(allClients: clientService.ClientWithTotal[], filterStatus: string): clientService.ClientWithTotal[] {
   if (filterStatus === 'all') return allClients;
   if (filterStatus === 'blacklist') return allClients.filter(c => c.blacklisted);
+  if (filterStatus === 'pending') return allClients.filter(c => c.isPending && !c.blacklisted);
   return allClients.filter(c => c.collectionStatus === filterStatus && !c.blacklisted);
 }
 

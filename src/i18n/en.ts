@@ -84,6 +84,7 @@ const en = {
   'clients.collectionCount': '{count} collection',
   'clients.collectionCount_plural': '{count} collections',
   'clients.filterAll': 'All',
+  'clients.filterPending': 'Pending',
   'clients.filterActive': 'Active',
   'clients.filterSettled': 'Settled',
   'clients.filterBlacklist': 'Black List',

@@ -86,6 +86,7 @@ const es: Translation = {
   'clients.collectionCount': '{count} cobro',
   'clients.collectionCount_plural': '{count} cobros',
   'clients.filterAll': 'Todos',
+  'clients.filterPending': 'Pendiente',
   'clients.filterActive': 'Activo',
   'clients.filterSettled': 'Liquidado',
   'clients.filterBlacklist': 'Lista Negra',

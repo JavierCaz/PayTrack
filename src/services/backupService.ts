@@ -73,7 +73,7 @@ async function importExternalFormat(data: any): Promise<void> {
         const startDate = normalizeDate(col.fechaCompra) || now;
 
         const productName = safeStr(col.nombre, 'Product');
-        const paymentDays = cobros.length > 0 ? String(new Date(normalizeDate(cobros[0].fechaCobro) || now).getDate()) : '1';
+        const paymentDays = '1,15';
 
         await db.runAsync(
           'INSERT INTO collections (id, client_id, product_name, total_price, num_installments, payments_per_month, payment_days, start_date, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
