@@ -3,6 +3,7 @@ import { Paths, File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Alert } from 'react-native';
 import { generateId, nowISO } from '../types';
+import { t } from '../i18n';
 
 interface BackupData {
   version: number;
@@ -142,14 +143,14 @@ export async function exportBackup(): Promise<void> {
     if (isAvailable) {
       await Sharing.shareAsync(file.uri, {
         mimeType: 'application/json',
-        dialogTitle: 'Save PayTrack Backup',
+        dialogTitle: t('backup.exportSuccess'),
       });
     } else {
-      Alert.alert('Backup saved', `Backup saved to ${file.uri}`);
+      Alert.alert(t('backup.exportSuccess'), t('backup.exportSavedTo', { path: file.uri }));
     }
   } catch (error) {
     console.error('Failed to export backup:', error);
-    Alert.alert('Error', 'Failed to export backup');
+    Alert.alert(t('common.error'), t('backup.exportFailed'));
   }
 }
 
@@ -162,14 +163,14 @@ export async function importBackup(uri: string): Promise<void> {
     // Detect external format (from another app) - has "clientes" array
     if (data.clientes && Array.isArray(data.clientes)) {
       await importExternalFormat(data);
-      Alert.alert('Success', 'Backup from external app imported successfully');
+      Alert.alert(t('common.success'), t('backup.importExternalSuccess'));
       return;
     }
 
     // Our own format
     const backup = data as BackupData;
     if (!backup.version || !backup.clients || !backup.collections || !backup.payments) {
-      Alert.alert('Invalid backup', 'The selected file is not a valid backup');
+      Alert.alert(t('backup.invalidFile'), t('backup.invalidFileDesc'));
       return;
     }
 
@@ -203,9 +204,9 @@ export async function importBackup(uri: string): Promise<void> {
         );
       }
     });
-    Alert.alert('Success', 'Backup restored successfully');
+    Alert.alert(t('common.success'), t('backup.importSuccess'));
   } catch (error) {
     console.error('Failed to import backup:', error);
-    Alert.alert('Error', 'Failed to import backup');
+    Alert.alert(t('common.error'), t('backup.importFailed'));
   }
 }

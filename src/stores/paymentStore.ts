@@ -17,14 +17,11 @@ interface PaymentState {
     overdueCollections: number;
     totalOutstanding: number;
     monthlyIncome: number;
-    dueToday: number;
-    overduePayments: number;
-    upcomingPayments: number;
   } | null;
   loadPayments: (collectionId: string) => Promise<void>;
   getPayment: (id: string) => Promise<any>;
-  recordPayment: (paymentId: string, paidAmount: number, paidDate?: string, notes?: string) => Promise<void>;
-  updatePayment: (paymentId: string, data: { paidAmount?: number; paidDate?: string; notes?: string }) => Promise<void>;
+  recordPayment: (collectionId: string, paidAmount: number, paidDate?: string, notes?: string) => Promise<string>;
+  updatePayment: (paymentId: string, data: { paidAmount?: number; paidDate?: string; notes?: string; amount?: number }) => Promise<void>;
   deletePayment: (paymentId: string) => Promise<void>;
   loadDashboardStats: () => Promise<void>;
 }
@@ -49,8 +46,8 @@ export const usePaymentStore = create<PaymentState>((set) => ({
     return paymentService.getPaymentWithDetails(id);
   },
 
-  recordPayment: async (paymentId, paidAmount, paidDate, notes) => {
-    await paymentService.recordPayment(paymentId, paidAmount, paidDate, notes);
+  recordPayment: async (collectionId, paidAmount, paidDate, notes) => {
+    return paymentService.recordPayment(collectionId, paidAmount, paidDate, notes);
   },
 
   updatePayment: async (paymentId, data) => {

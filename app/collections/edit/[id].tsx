@@ -35,6 +35,7 @@ export default function EditCollectionScreen() {
   const [paymentsPerMonth, setPaymentsPerMonth] = useState('2');
   const [paymentDays, setPaymentDays] = useState('1,15');
   const [startDate, setStartDate] = useState('');
+  const [installmentAmount, setInstallmentAmount] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -46,6 +47,7 @@ export default function EditCollectionScreen() {
         setPaymentsPerMonth(col.paymentsPerMonth.toString());
         setPaymentDays(col.paymentDays.join(','));
         setStartDate(col.startDate);
+        setInstallmentAmount(col.installmentAmount ? col.installmentAmount.toString() : '');
       }
       setLoading(false);
     });
@@ -60,7 +62,11 @@ export default function EditCollectionScreen() {
     if (days.length === 0) { Alert.alert(t('common.error'), t('collection.paymentDaysError')); return; }
     setSaving(true);
     try {
-      await updateCollection(id, { productName: productName.trim(), totalPrice: parseFloat(totalPrice), numInstallments: parseInt(numInstallments), paymentsPerMonth: Math.min(parseInt(paymentsPerMonth), days.length), paymentDays: days, startDate });
+      await updateCollection(id, {
+        productName: productName.trim(), totalPrice: parseFloat(totalPrice), numInstallments: parseInt(numInstallments),
+        paymentsPerMonth: Math.min(parseInt(paymentsPerMonth), days.length), paymentDays: days, startDate,
+        installmentAmount: installmentAmount ? parseFloat(installmentAmount) : null,
+      });
       Alert.alert(t('common.success'), t('collection.create'), [{ text: t('common.done'), onPress: () => router.back() }]);
     } catch { Alert.alert(t('common.error'), t('collection.createFailed')); }
     finally { setSaving(false); }
@@ -78,6 +84,7 @@ export default function EditCollectionScreen() {
           <View style={[styles.field, { flex: 1 }]}><Text style={styles.label}>{t('collection.perMonth')}</Text><TextInput style={styles.input} value={paymentsPerMonth} onChangeText={setPaymentsPerMonth} placeholder="2" placeholderTextColor={colors.textTertiary} keyboardType="number-pad" /></View>
         </View>
         <View style={styles.field}><Text style={styles.label}>{t('collection.paymentDays')}</Text><TextInput style={styles.input} value={paymentDays} onChangeText={setPaymentDays} placeholder="1, 15" placeholderTextColor={colors.textTertiary} /><Text style={styles.hint}>{t('collection.paymentDaysHint')}</Text></View>
+        <View style={styles.field}><Text style={styles.label}>{t('collection.installmentAmount')}</Text><TextInput style={styles.input} value={installmentAmount} onChangeText={setInstallmentAmount} placeholder={t('collection.installmentAmountPlaceholder')} placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.installmentAmountHint')}</Text></View>
         <DatePickerField label={t('collection.startDate')} value={startDate} onChange={setStartDate} />
         <Text style={styles.warningBox}>{t('collection.editWarning')}</Text>
       </ScrollView>

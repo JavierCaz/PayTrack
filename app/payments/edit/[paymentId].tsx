@@ -55,22 +55,22 @@ export default function EditPaymentScreen() {
   }, [paymentId, getPayment]);
 
   const handleSave = async () => {
-    if (!paidAmount || parseFloat(paidAmount) <= 0) { Alert.alert(t('common.required'), 'Enter a valid amount'); return; }
-    if (!paidDate) { Alert.alert(t('common.required'), 'Enter a date'); return; }
+    if (!paidAmount || parseFloat(paidAmount) <= 0) { Alert.alert(t('common.required'), t('payment.enterValidAmount')); return; }
+    if (!paidDate) { Alert.alert(t('common.required'), t('payment.enterDate')); return; }
     setSaving(true);
     try {
       await updatePayment(paymentId!, { paidAmount: parseFloat(paidAmount), paidDate, notes: notes.trim() || undefined });
       Alert.alert(t('common.success'), t('payment.paidSuccess'), [{ text: t('common.done'), onPress: () => router.back() }]);
-    } catch { Alert.alert(t('common.error'), 'Failed to update'); }
+    } catch { Alert.alert(t('common.error'), t('payment.updateFailed')); }
     finally { setSaving(false); }
   };
 
   const handleDelete = () => {
-    Alert.alert(t('common.delete'), 'Reset this payment to unpaid?', [
+    Alert.alert(t('common.delete'), t('payment.deleteConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('common.delete'), style: 'destructive', onPress: async () => {
-        try { await deletePayment(paymentId!); Alert.alert(t('common.success'), 'Payment reset'); router.back(); }
-        catch { Alert.alert(t('common.error'), 'Failed'); }
+        try { await deletePayment(paymentId!); Alert.alert(t('common.success'), t('payment.deleteSuccess')); router.back(); }
+        catch { Alert.alert(t('common.error'), t('payment.deleteFailed')); }
       }},
     ]);
   };

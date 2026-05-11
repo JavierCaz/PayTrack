@@ -19,6 +19,7 @@ export interface Collection {
   paymentsPerMonth: number;
   paymentDays: number[];
   startDate: string;
+  installmentAmount: number | null;
   status: 'active' | 'completed' | 'overdue';
   createdAt: string;
   updatedAt: string;
@@ -30,7 +31,7 @@ export interface Payment {
   installmentNumber: number;
   dueDate: string;
   amount: number;
-  status: 'pending' | 'paid' | 'overdue' | 'partial';
+  status: 'paid';
   paidDate: string | null;
   paidAmount: number | null;
   notes: string;
@@ -48,7 +49,7 @@ export interface PaymentWithCollection extends Payment {
 }
 
 export type CollectionStatus = 'active' | 'completed' | 'overdue';
-export type PaymentStatus = 'pending' | 'paid' | 'overdue' | 'partial';
+export type PaymentStatus = 'paid';
 
 export interface DashboardStats {
   totalClients: number;
@@ -62,9 +63,6 @@ export interface DashboardStats {
   overdueCollections: number;
   totalOutstanding: number;
   monthlyIncome: number;
-  dueToday: number;
-  overduePayments: number;
-  upcomingPayments: number;
 }
 
 export interface MonthlyIncome {

@@ -102,7 +102,8 @@ export async function initDatabase(): Promise<void> {
       num_installments INTEGER NOT NULL DEFAULT 12,
       payments_per_month INTEGER NOT NULL DEFAULT 2,
       payment_days TEXT NOT NULL DEFAULT '1,15',
-      start_date TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active',
+      start_date TEXT NOT NULL, installment_amount REAL,
+      status TEXT NOT NULL DEFAULT 'active',
       created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
       FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
     )`,
@@ -127,5 +128,6 @@ export async function initDatabase(): Promise<void> {
     // Migrations for new columns added after initial schema
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN blacklisted INTEGER DEFAULT 0'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN blacklist_note TEXT DEFAULT \'\''); } catch (_) {}
+    try { await database.runAsync('ALTER TABLE collections ADD COLUMN installment_amount REAL'); } catch (_) {}
   });
 }

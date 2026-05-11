@@ -50,7 +50,7 @@ export async function getClients(search?: string): Promise<ClientWithTotal[]> {
       SELECT col.id, col.client_id, col.total_price,
         COALESCE(SUM(p.paid_amount), 0) as total_paid
       FROM collections col
-      LEFT JOIN payments p ON p.collection_id = col.id AND p.status IN ('paid', 'partial')
+      LEFT JOIN payments p ON p.collection_id = col.id AND p.status = 'paid'
       GROUP BY col.id
     ) col ON col.client_id = c.id`;
     const where = search ? `WHERE c.name LIKE ?` : ``;

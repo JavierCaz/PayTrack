@@ -42,10 +42,11 @@ export function generatePaymentSchedule(
   numInstallments: number,
   totalPrice: number,
   paymentsPerMonth: number,
-  paymentDays: number[]
+  paymentDays: number[],
+  installmentAmount?: number | null
 ): { installmentNumber: number; dueDate: string; amount: number }[] {
   const start = dayjs(startDate);
-  const amount = totalPrice / numInstallments;
+  const amount = installmentAmount ?? totalPrice / numInstallments;
   const days = [...paymentDays].sort((a, b) => a - b).slice(0, paymentsPerMonth);
   const schedule: { installmentNumber: number; dueDate: string; amount: number }[] = [];
 

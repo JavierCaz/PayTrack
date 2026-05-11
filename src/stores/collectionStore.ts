@@ -19,6 +19,7 @@ interface CollectionState {
     paymentsPerMonth: number;
     paymentDays: number[];
     startDate: string;
+    installmentAmount?: number | null;
   }) => Promise<string>;
   updateCollection: (id: string, data: {
     productName?: string;
@@ -27,6 +28,7 @@ interface CollectionState {
     paymentsPerMonth?: number;
     paymentDays?: number[];
     startDate?: string;
+    installmentAmount?: number | null;
     status?: string;
   }) => Promise<void>;
   deleteCollection: (id: string) => Promise<void>;

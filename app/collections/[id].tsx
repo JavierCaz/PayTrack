@@ -1,16 +1,16 @@
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert } from 'react-native';
-import { useMemo, useCallback, useState  } from 'react';
-import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import PaymentItem from '../../components/PaymentItem';
-import LoadingScreen from '../../components/LoadingScreen';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import EmptyState from '../../components/EmptyState';
-import { usePaymentStore } from '../../src/stores/paymentStore';
-import { useCollectionStore } from '../../src/stores/collectionStore';
+import LoadingScreen from '../../components/LoadingScreen';
+import PaymentItem from '../../components/PaymentItem';
 import { useTranslation } from '../../src/i18n';
+import { useCollectionStore } from '../../src/stores/collectionStore';
+import { usePaymentStore } from '../../src/stores/paymentStore';
 import { useTheme } from '../../src/theme';
-import { formatCurrency } from '../../src/utils/formatters';
 import { formatDate } from '../../src/utils/dateUtils';
+import { formatCurrency } from '../../src/utils/formatters';
 
 export default function CollectionDetailScreen() {
   const { t } = useTranslation();
@@ -69,12 +69,9 @@ export default function CollectionDetailScreen() {
   if (loading) return <LoadingScreen />;
   if (!collection) return <EmptyState icon="alert-circle" title={t('collection.notFound')} />;
 
-  const statusColor = collection.status === 'active' ? colors.statusActive : collection.status === 'completed' ? colors.statusCompleted : colors.statusOverdue;
-  const submitted = payments.filter(p => p.status === 'paid' || p.status === 'partial');
-  const paidCount = submitted.length;
-  const totalCount = payments.length;
+  const statusColor = collection.status === 'active' ? colors.statusActive : colors.statusCompleted;
   const hasRemaining = collection.remainingBalance > 0;
-  const progress = totalCount > 0 ? (paidCount / totalCount) * 100 : 0;
+  const progress = collection.totalPrice > 0 ? (collection.paidAmount / collection.totalPrice) * 100 : 0;
 
   return (
     <View style={styles.container}>
@@ -101,7 +98,7 @@ export default function CollectionDetailScreen() {
         </View>
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}><View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%` }]} /></View>
-          <Text style={styles.progressText}>{t('collection.installmentCount', { count: paidCount, total: totalCount })}</Text>
+          <Text style={styles.progressText}>{formatCurrency(collection.paidAmount)} / {formatCurrency(collection.totalPrice)}</Text>
         </View>
         <View style={styles.infoRow}>
           <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.startDateLabel')}</Text><Text style={styles.infoValue}>{formatDate(collection.startDate)}</Text></View>
@@ -109,13 +106,13 @@ export default function CollectionDetailScreen() {
           <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.frequency')}</Text><Text style={styles.infoValue}>{t('collection.xPerMonth', { count: collection.paymentsPerMonth })}</Text></View>
         </View>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('collection.installmentsLabel')} ({t('collection.installmentCount', { count: paidCount, total: totalCount })})</Text>
+          <Text style={styles.sectionTitle}>{t('collection.payments')} ({payments.length})</Text>
         </View>
-        {submitted.length === 0
-          ? <EmptyState icon="calendar-outline" title={t('collection.noPayments')} subtitle={t('collection.noPaymentsDesc')} />
-          : submitted.map((p: any) => (
+        {payments.length === 0
+          ? <EmptyState icon="cash-outline" title={t('collection.noPayments')} subtitle={t('collection.noPaymentsDesc')} />
+          : payments.map((p: any) => (
               <TouchableOpacity key={p.id} onPress={() => router.push(`/payments/edit/${p.id}`)}>
-                <PaymentItem installmentNumber={p.installmentNumber} dueDate={p.dueDate} amount={p.amount} status={p.status} paidDate={p.paidDate} paidAmount={p.paidAmount} />
+                <PaymentItem installmentNumber={p.installmentNumber} dueDate={p.dueDate} amount={p.amount} paidDate={p.paidDate} paidAmount={p.paidAmount} />
               </TouchableOpacity>
             ))
         }

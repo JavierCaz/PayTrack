@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { getLocales } from 'expo-localization';
 import en from './en';
 import es from './es';
@@ -49,23 +49,40 @@ interface LocaleProviderProps {
   initialLocale?: AppLocale;
 }
 
+// Module-level state for non-React usage (services, etc.)
+let _locale: AppLocale = detectDeviceLocale();
+
+export function setLocaleGlobal(locale: AppLocale) {
+  _locale = locale;
+}
+
+export function t(key: string, params?: Record<string, string | number>): string {
+  const text = resolveValue(translations[_locale], key);
+  return interpolate(text, params);
+}
+
 export function LocaleProvider({ children, onLocaleChange, initialLocale }: LocaleProviderProps) {
   const [locale, setLocaleState] = useState<AppLocale>(initialLocale || detectDeviceLocale());
 
+  useEffect(() => {
+    setLocaleGlobal(locale);
+  }, []);
+
   const setLocale = useCallback(async (newLocale: AppLocale) => {
     setLocaleState(newLocale);
+    setLocaleGlobal(newLocale);
     if (onLocaleChange) {
       await onLocaleChange(newLocale);
     }
   }, [onLocaleChange]);
 
-  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
+  const tHook = useCallback((key: string, params?: Record<string, string | number>): string => {
     const text = resolveValue(translations[locale], key);
     return interpolate(text, params);
   }, [locale]);
 
   return (
-    <LocaleContext.Provider value={{ locale, setLocale, t }}>
+    <LocaleContext.Provider value={{ locale, setLocale, t: tHook }}>
       {children}
     </LocaleContext.Provider>
   );

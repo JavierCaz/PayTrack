@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS collections (
   payments_per_month INTEGER NOT NULL DEFAULT 2,
   payment_days TEXT NOT NULL DEFAULT '1,15',
   start_date TEXT NOT NULL,
+  installment_amount REAL,
   status TEXT NOT NULL DEFAULT 'active',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
