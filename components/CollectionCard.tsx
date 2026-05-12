@@ -58,7 +58,7 @@ export default function CollectionCard({ productName, clientName, totalPrice, pa
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%`, backgroundColor: statusColor }]} />
         </View>
-        <Text style={styles.progressText}>{formatCurrency(paidAmount)} / {formatCurrency(totalPrice)}</Text>
+        <Text style={styles.progressText}>{Math.round(progress)}%</Text>
       </View>
       <View style={styles.footer}>
         <View>

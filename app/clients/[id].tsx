@@ -5,6 +5,7 @@ import { Alert, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, 
 import CollectionCard from '../../components/CollectionCard';
 import EmptyState from '../../components/EmptyState';
 import LoadingScreen from '../../components/LoadingScreen';
+import { formatCurrency } from '../../src/utils/formatters';
 import SearchBar from '../../components/SearchBar';
 import FilterChips from '../../components/FilterChips';
 import { useTranslation } from '../../src/i18n';
@@ -52,6 +53,13 @@ export default function ClientDetailScreen() {
     modalConfirm: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.danger },
     modalConfirmText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
     fab: { position: 'absolute', right: 20, bottom: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: colors.fabBg, justifyContent: 'center', alignItems: 'center', shadowColor: colors.fabBg, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+    summary: { width: '100%', marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.inputBorder },
+    summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
+    summaryLabel: { fontSize: 14, color: colors.textSecondary },
+    summaryValue: { fontSize: 14, fontWeight: '600', color: colors.text },
+    summaryTotalLabel: { fontSize: 15, fontWeight: '700', color: colors.text },
+    summaryTotalValue: { fontSize: 15, fontWeight: '700', color: colors.text },
+    summaryDivider: { height: 1, backgroundColor: colors.inputBorder, marginVertical: 4 },
   }), [colors]);
 
   const client = allClients.find(c => c.id === id) || clients.find(c => c.id === id);
@@ -61,6 +69,13 @@ export default function ClientDetailScreen() {
     if (searchQuery) result = result.filter(c => c.productName.toLowerCase().includes(searchQuery.toLowerCase()));
     return result;
   }, [collections, searchQuery, filterStatus]);
+
+  const totals = useMemo(() => {
+    const totalCollectionsAmount = collections.reduce((sum, c) => sum + c.totalPrice, 0);
+    const totalPaid = collections.reduce((sum, c) => sum + c.paidAmount, 0);
+    const totalRemaining = collections.reduce((sum, c) => sum + c.remainingBalance, 0);
+    return { totalCollectionsAmount, totalPaid, totalRemaining };
+  }, [collections]);
   const loadData = useCallback(async () => {
     if (!id) return;
     setCollections(await loadClientCollectionsWithMeta(id));
@@ -103,6 +118,23 @@ export default function ClientDetailScreen() {
           {client.phone && <View style={styles.row}><Ionicons name="call-outline" size={16} color={colors.textSecondary} /><Text style={styles.detail}>{client.phone}</Text></View>}
           {client.email && <View style={styles.row}><Ionicons name="mail-outline" size={16} color={colors.textSecondary} /><Text style={styles.detail}>{client.email}</Text></View>}
           {client.notes ? <Text style={styles.notes}>{client.notes}</Text> : null}
+          {collections.length > 0 && (
+            <View style={styles.summary}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>{t('clients.totalPaid')}</Text>
+                <Text style={[styles.summaryValue, { color: colors.success }]}>{formatCurrency(totals.totalPaid)}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>{t('clients.totalRemaining')}</Text>
+                <Text style={[styles.summaryValue, { color: colors.danger }]}>{formatCurrency(totals.totalRemaining)}</Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryTotalLabel}>{t('collection.total')}</Text>
+                <Text style={styles.summaryTotalValue}>{formatCurrency(totals.totalPaid + totals.totalRemaining)}</Text>
+              </View>
+            </View>
+          )}
         </View>
         <View style={styles.actions}>
           <TouchableOpacity style={styles.actionButton} onPress={() => router.push(`/clients/edit/${client.id}`)}>

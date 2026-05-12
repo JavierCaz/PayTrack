@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { dbQuery, withTransaction, type SQLiteDatabase } from '../database/database';
 import { Payment as PaymentRow, generateId, nowISO } from '../types';
 import { _updateCollectionStatus } from './collectionService';
@@ -31,7 +32,7 @@ export async function getPaymentWithDetails(id: string): Promise<any | null> {
   return dbQuery(async (db) => {
     const row: any = await db.getFirstAsync(
       `SELECT p.*, c.product_name, c.total_price, c.num_installments, cl.name as client_name, cl.phone as client_phone,
-        (SELECT COALESCE(SUM(paid_amount), 0) FROM payments WHERE collection_id = p.collection_id) as total_paid_for_collection
+        (SELECT COALESCE(SUM(paid_amount), 0) FROM payments WHERE collection_id = p.collection_id AND installment_number <= p.installment_number) as total_paid_for_collection
        FROM payments p JOIN collections c ON c.id = p.collection_id JOIN clients cl ON cl.id = c.client_id WHERE p.id = ?`, [id]);
     if (!row) return null;
     return { ...rowToPayment(row), productName: row.product_name, totalPrice: row.total_price, numInstallments: row.num_installments, clientName: row.client_name, clientPhone: row.client_phone, totalPaidForCollection: row.total_paid_for_collection };
@@ -92,19 +93,15 @@ export async function getDashboardStats(): Promise<{
   activeClients: number; blacklistedClients: number;
 }> {
   return dbQuery(async (db) => {
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    const monthStartStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const monthEndStr = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-    const yearStartStr = `${now.getFullYear()}-01-01`;
-    const yearEndStr = `${now.getFullYear()}-12-31`;
-    const dayOfWeek = now.getDay();
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
-    const weekStartStr = weekStart.toISOString().split('T')[0];
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    const weekEndStr = weekEnd.toISOString().split('T')[0];
+    const now = dayjs();
+    const todayStr = now.format('YYYY-MM-DD');
+    const monthStartStr = now.startOf('month').format('YYYY-MM-DD');
+    const monthEndStr = now.endOf('month').format('YYYY-MM-DD');
+    const yearStartStr = now.startOf('year').format('YYYY-MM-DD');
+    const yearEndStr = now.endOf('year').format('YYYY-MM-DD');
+    const weekStart = now.subtract((now.day() + 6) % 7, 'day');
+    const weekStartStr = weekStart.format('YYYY-MM-DD');
+    const weekEndStr = weekStart.add(6, 'day').format('YYYY-MM-DD');
 
     const totalClients = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM clients");
     const totalCollections = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections");

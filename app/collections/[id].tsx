@@ -105,7 +105,7 @@ export default function CollectionDetailScreen() {
         </View>
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}><View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%` }]} /></View>
-          <Text style={styles.progressText}>{formatCurrency(collection.paidAmount)} / {formatCurrency(collection.totalPrice)}</Text>
+          <Text style={styles.progressText}>{Math.round(progress)}%</Text>
         </View>
         <View style={styles.infoRow}>
           <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.startDateLabel')}</Text><Text style={styles.infoValue}>{formatDate(collection.startDate)}</Text></View>
