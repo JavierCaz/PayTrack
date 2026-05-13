@@ -1,0 +1,37 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npx expo-version
+      - run: eas build --platform android --profile preview --non-interactive --wait
+
+      - name: Download APK from EAS
+        run: |
+          INFO=$(eas build:list --platform android --profile preview --limit 1 --non-interactive --json)
+          URL=$(echo "$INFO" | jq -r '.[0].artifacts.buildUrl')
+          curl -L -o paytrack.apk "$URL"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paytrack-apk
+          path: paytrack.apk
