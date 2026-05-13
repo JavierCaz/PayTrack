@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useMemo, useCallback, useState  } from 'react';
 import { useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatCard from '../../components/StatCard';
 import LoadingScreen from '../../components/LoadingScreen';
 import { usePaymentStore } from '../../src/stores/paymentStore';
@@ -13,6 +14,7 @@ type Period = 'today' | 'week' | 'month' | 'year';
 export default function Dashboard() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { stats, loadDashboardStats } = usePaymentStore();
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState<Period>('month');
@@ -62,7 +64,7 @@ export default function Dashboard() {
   if (!stats) return <LoadingScreen />;
 
   return (
-    <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <View style={styles.header}>
         <Text style={styles.greeting}>{t('dashboard.title')}</Text>
         <Text style={styles.subtitle}>{t('dashboard.subtitle')}</Text>

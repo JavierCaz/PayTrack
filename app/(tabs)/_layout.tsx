@@ -2,21 +2,23 @@ import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 import { useMemo } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from '../../src/i18n';
 import { useTheme } from '../../src/theme';
 
 export default function TabLayout() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const tabBarStyle = useMemo(() => ({
     backgroundColor: colors.tabBarBg,
     borderTopColor: colors.tabBarBorder,
     borderTopWidth: 1,
-    paddingBottom: 8,
+    paddingBottom: insets.bottom + 8,
     paddingTop: 8,
-    height: 60,
-  }), [colors]);
+    height: insets.bottom + 60,
+  }), [colors, insets.bottom]);
 
   const headerStyle = useMemo(() => ({ backgroundColor: colors.headerBg }), [colors]);
 
