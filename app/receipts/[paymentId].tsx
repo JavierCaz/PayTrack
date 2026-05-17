@@ -49,6 +49,7 @@ export default function ReceiptScreen() {
           receiptNumber={payment.id.slice(-8).toUpperCase()}
           totalCollectionAmount={payment.totalPrice}
           pendingAmount={Math.max(0, payment.totalPrice - payment.totalPaidForCollection)}
+          notes={payment.notes}
         />
       </View>
       <View style={styles.actions}>

@@ -202,6 +202,7 @@ const es: Translation = {
   'receipt.totalCollection': 'Total',
   'receipt.paymentMade': 'Pago Realizado',
   'receipt.pendingAfter': 'Pendiente Después de Pago',
+  'receipt.notes': 'Notas',
   'receipt.thankYou': '¡Gracias por tu pago!',
   'receipt.share': 'Compartir',
   'receipt.saveToGallery': 'Guardar en Galería',

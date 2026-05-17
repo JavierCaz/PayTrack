@@ -13,6 +13,7 @@ interface ReceiptTemplateProps {
   receiptNumber?: string;
   totalCollectionAmount: number;
   pendingAmount: number;
+  notes?: string;
 }
 
 export default function ReceiptTemplate({
@@ -25,6 +26,7 @@ export default function ReceiptTemplate({
   receiptNumber,
   totalCollectionAmount,
   pendingAmount,
+  notes,
 }: ReceiptTemplateProps) {
   const { t } = useTranslation();
 
@@ -57,6 +59,13 @@ export default function ReceiptTemplate({
           <Text style={styles.value}>{installmentNumber} / {totalInstallments}</Text>
         </View>
       </View>
+
+      {!!notes && (
+        <View style={styles.notesSection}>
+          <Text style={styles.sectionTitle}>{t('receipt.notes')}</Text>
+          <Text style={styles.notesText}>{notes}</Text>
+        </View>
+      )}
 
       <View style={styles.divider} />
 
@@ -131,6 +140,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#111827',
+  },
+  notesSection: {
+    marginBottom: 4,
+  },
+  notesText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+    fontStyle: 'italic',
   },
   totalSection: {
     gap: 12,

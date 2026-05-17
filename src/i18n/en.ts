@@ -200,6 +200,7 @@ const en = {
   'receipt.totalCollection': 'Total',
   'receipt.paymentMade': 'Payment Made',
   'receipt.pendingAfter': 'Pending After Payment',
+  'receipt.notes': 'Notes',
   'receipt.thankYou': 'Thank you for your payment!',
   'receipt.share': 'Share',
   'receipt.saveToGallery': 'Save to Gallery',
