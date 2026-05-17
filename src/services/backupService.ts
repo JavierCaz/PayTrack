@@ -76,9 +76,9 @@ async function importExternalFormat(data: any): Promise<void> {
         const paymentDays = '1,15';
 
         await db.runAsync(
-          'INSERT INTO collections (id, client_id, product_name, total_price, num_installments, payments_per_month, payment_days, start_date, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO collections (id, client_id, product_name, total_price, num_installments, payment_days, start_date, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [newCollId, clientId, productName, totalPrice,
-           numInstallments, 1, paymentDays, startDate, 'active', now, now]
+           numInstallments, paymentDays, startDate, 'active', now, now]
         );
 
         for (let i = 0; i < cobros.length; i++) {
@@ -185,9 +185,9 @@ export async function importBackup(uri: string): Promise<void> {
 
       for (const collection of backup.collections) {
         await db.runAsync(
-          'INSERT INTO collections (id, client_id, product_name, total_price, num_installments, payments_per_month, payment_days, start_date, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO collections (id, client_id, product_name, total_price, num_installments, payment_days, start_date, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [collection.id, collection.client_id, collection.product_name, collection.total_price,
-           collection.num_installments, collection.payments_per_month, collection.payment_days,
+           collection.num_installments, collection.payment_days,
            collection.start_date, collection.status, collection.created_at, collection.updated_at]
         );
       }

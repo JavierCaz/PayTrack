@@ -16,7 +16,6 @@ interface CollectionState {
     productName: string;
     totalPrice: number;
     numInstallments: number;
-    paymentsPerMonth: number;
     recurrence: RecurrenceConfig;
     startDate: string;
     installmentAmount?: number | null;
@@ -25,7 +24,6 @@ interface CollectionState {
     productName?: string;
     totalPrice?: number;
     numInstallments?: number;
-    paymentsPerMonth?: number;
     recurrence?: RecurrenceConfig;
     startDate?: string;
     installmentAmount?: number | null;

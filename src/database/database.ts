@@ -100,7 +100,6 @@ export async function initDatabase(): Promise<void> {
       id TEXT PRIMARY KEY, client_id TEXT NOT NULL,
       product_name TEXT NOT NULL, total_price REAL NOT NULL,
       num_installments INTEGER NOT NULL DEFAULT 12,
-      payments_per_month INTEGER NOT NULL DEFAULT 2,
       payment_days TEXT NOT NULL DEFAULT '1,15',
       start_date TEXT NOT NULL, installment_amount REAL,
       status TEXT NOT NULL DEFAULT 'active',
@@ -130,5 +129,6 @@ export async function initDatabase(): Promise<void> {
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN blacklist_note TEXT DEFAULT \'\''); } catch (_) {}
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN default_recurrence TEXT'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE collections ADD COLUMN installment_amount REAL'); } catch (_) {}
+    try { await database.runAsync('ALTER TABLE collections DROP COLUMN payments_per_month'); } catch (_) {}
   });
 }

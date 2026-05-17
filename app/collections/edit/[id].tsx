@@ -94,15 +94,6 @@ export default function EditCollectionScreen() {
     return { type: 'monthly_weekday', monthDays: [], weekDays: [], monthWeekday: [monthWeekday] };
   };
 
-  const getPaymentsPerMonth = (): number => {
-    if (recurrenceType === 'monthly') {
-      const days = monthDays.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d > 0 && d <= 31);
-      return Math.min(days.length, parseInt(numInstallments) || 12);
-    }
-    if (recurrenceType === 'weekly') return weekDays.length;
-    return 1;
-  };
-
   const handleSave = async () => {
     if (!productName.trim()) { Alert.alert(t('common.required'), t('collection.productRequired')); return; }
     if (!totalPrice || parseFloat(totalPrice) <= 0) { Alert.alert(t('common.required'), t('collection.priceRequired')); return; }
@@ -114,7 +105,7 @@ export default function EditCollectionScreen() {
     try {
       await updateCollection(id, {
         productName: productName.trim(), totalPrice: parseFloat(totalPrice), numInstallments: parseInt(numInstallments),
-        paymentsPerMonth: getPaymentsPerMonth(), recurrence, startDate,
+        recurrence, startDate,
         installmentAmount: installmentAmount ? parseFloat(installmentAmount) : null,
       });
       Alert.alert(t('common.success'), t('collection.updated'), [{ text: t('common.done'), onPress: () => router.back() }]);

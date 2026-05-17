@@ -67,12 +67,16 @@ export function generatePaymentSchedule(
   numInstallments: number,
   totalPrice: number,
   recurrence: RecurrenceConfig,
-  paymentsPerMonth: number,
   installmentAmount?: number | null
 ): { installmentNumber: number; dueDate: string; amount: number }[] {
   const start = dayjs(startDate);
   const amount = installmentAmount ?? totalPrice / numInstallments;
   const schedule: { installmentNumber: number; dueDate: string; amount: number }[] = [];
+  const paymentsPerMonth = recurrence.type === 'monthly'
+    ? recurrence.monthDays.length
+    : recurrence.type === 'weekly'
+    ? recurrence.weekDays.length
+    : recurrence.monthWeekday.length;
 
   if (recurrence.type === 'weekly') {
     const sortedDays = [...recurrence.weekDays].sort();

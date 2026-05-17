@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS collections (
   product_name TEXT NOT NULL,
   total_price REAL NOT NULL,
   num_installments INTEGER NOT NULL DEFAULT 12,
-  payments_per_month INTEGER NOT NULL DEFAULT 2,
   payment_days TEXT NOT NULL DEFAULT '1,15',
   start_date TEXT NOT NULL,
   installment_amount REAL,
