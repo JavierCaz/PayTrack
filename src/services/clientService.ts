@@ -127,7 +127,7 @@ async function getPendingClientIds(db: any): Promise<Set<string>> {
   return pendingClients;
 }
 
-export async function getClients(search?: string): Promise<ClientWithTotal[]> {
+export async function getClients(): Promise<ClientWithTotal[]> {
   return dbQuery(async (db) => {
     const select = `SELECT c.*,
       COALESCE(SUM(col.total_price), 0) as total_collections,
@@ -143,11 +143,9 @@ export async function getClients(search?: string): Promise<ClientWithTotal[]> {
       LEFT JOIN payments p ON p.collection_id = col.id AND p.status = 'paid'
       GROUP BY col.id
     ) col ON col.client_id = c.id`;
-    const where = search ? `WHERE c.name LIKE ?` : ``;
     const groupOrder = `GROUP BY c.id ORDER BY c.name ASC`;
-    const query = [select, from, where, groupOrder].filter(Boolean).join(' ');
-    const params = search ? [`%${search}%`] : [];
-    const rows = await db.getAllAsync(query, params);
+    const query = [select, from, groupOrder].filter(Boolean).join(' ');
+    const rows = await db.getAllAsync(query);
     const clients = rows.map(rowToClientWithTotal);
     const pendingIds = await getPendingClientIds(db);
     return clients.map(c => ({ ...c, isPending: pendingIds.has(c.id) }));

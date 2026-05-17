@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCollectionStore } from '../../../src/stores/collectionStore';
 import { useTranslation } from '../../../src/i18n';
 import { useTheme } from '../../../src/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dayjs from 'dayjs';
 import type { RecurrenceType, RecurrenceConfig } from '../../../src/types';
 import * as clientService from '../../../src/services/clientService';
@@ -12,6 +13,7 @@ import * as clientService from '../../../src/services/clientService';
 export default function NewCollectionScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { clientId } = useLocalSearchParams<{ clientId: string }>();
   const { createCollection } = useCollectionStore();
 
@@ -199,7 +201,7 @@ export default function NewCollectionScreen() {
         <View style={styles.field}><Text style={styles.label}>{t('collection.installmentAmount')}</Text><TextInput style={styles.input} value={installmentAmount} onChangeText={setInstallmentAmount} placeholder={t('collection.installmentAmountPlaceholder')} placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.installmentAmountHint')}</Text></View>
         <View style={styles.field}><Text style={styles.label}>{t('collection.startDate')}</Text><TextInput style={styles.input} value={startDate} onChangeText={setStartDate} placeholder={t('collection.startDatePlaceholder')} placeholderTextColor={colors.textTertiary} /><Text style={styles.hint}>{t('collection.startDateHint')}</Text></View>
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
           <Ionicons name="checkmark" size={22} color="#FFFFFF" /><Text style={styles.saveText}>{saving ? t('common.creating') : t('collection.create')}</Text>
         </TouchableOpacity>

@@ -5,11 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useClientStore } from '../../src/stores/clientStore';
 import { useTranslation } from '../../src/i18n';
 import { useTheme } from '../../src/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RecurrenceType, RecurrenceConfig } from '../../src/types';
 
 export default function NewClientScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -158,7 +160,7 @@ export default function NewClientScreen() {
           </>
         )}
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
           <Ionicons name="checkmark" size={22} color="#FFFFFF" />
           <Text style={styles.saveText}>{saving ? t('common.saving') : t('common.save')}</Text>

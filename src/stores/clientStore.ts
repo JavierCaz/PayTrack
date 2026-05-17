@@ -19,6 +19,10 @@ interface ClientState {
   getClient: (id: string) => Client | undefined;
 }
 
+function normalizeText(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function applyFilter(allClients: clientService.ClientWithTotal[], filterStatus: string): clientService.ClientWithTotal[] {
   if (filterStatus === 'all') return allClients;
   if (filterStatus === 'blacklist') return allClients.filter(c => c.blacklisted);
@@ -26,7 +30,16 @@ function applyFilter(allClients: clientService.ClientWithTotal[], filterStatus: 
   return allClients.filter(c => c.collectionStatus === filterStatus && !c.blacklisted);
 }
 
-export const useClientStore = create<ClientState>((set, get) => ({
+function applySearch(clients: clientService.ClientWithTotal[], searchQuery: string): clientService.ClientWithTotal[] {
+  if (!searchQuery) return clients;
+  const normalizedQuery = normalizeText(searchQuery.toLowerCase());
+  return clients.filter(c => normalizeText(c.name.toLowerCase()).includes(normalizedQuery));
+}
+
+export const useClientStore = create<ClientState>((set, get) => {
+  let loadGeneration = 0;
+
+  return {
   clients: [],
   allClients: [],
   loading: false,
@@ -45,14 +58,17 @@ export const useClientStore = create<ClientState>((set, get) => ({
   },
 
   loadClients: async () => {
+    const generation = ++loadGeneration;
     set({ loading: true });
     try {
       const { searchQuery, filterStatus } = get();
-      const allClients = await clientService.getClients(searchQuery || undefined);
-      set({ allClients, clients: applyFilter(allClients, filterStatus), loading: false });
+      const allClients = await clientService.getClients();
+      if (generation !== loadGeneration) return;
+      const searched = applySearch(allClients, searchQuery);
+      set({ allClients, clients: applyFilter(searched, filterStatus), loading: false });
     } catch (error) {
       console.error('Failed to load clients:', error);
-      set({ loading: false });
+      if (generation === loadGeneration) set({ loading: false });
     }
   },
 
@@ -85,4 +101,5 @@ export const useClientStore = create<ClientState>((set, get) => ({
   getClient: (id) => {
     return get().clients.find(c => c.id === id);
   },
-}));
+};
+});

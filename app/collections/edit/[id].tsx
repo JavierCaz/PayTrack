@@ -6,11 +6,13 @@ import DatePickerField from '../../../components/DatePickerField';
 import { useCollectionStore } from '../../../src/stores/collectionStore';
 import { useTranslation } from '../../../src/i18n';
 import { useTheme } from '../../../src/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RecurrenceType, RecurrenceConfig } from '../../../src/types';
 
 export default function EditCollectionScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getCollection, updateCollection } = useCollectionStore();
 
@@ -212,7 +214,7 @@ export default function EditCollectionScreen() {
         <View style={styles.field}><Text style={styles.label}>{t('collection.installmentAmount')}</Text><TextInput style={styles.input} value={installmentAmount} onChangeText={setInstallmentAmount} placeholder={t('collection.installmentAmountPlaceholder')} placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.installmentAmountHint')}</Text></View>
         <DatePickerField label={t('collection.startDate')} value={startDate} onChange={setStartDate} />
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
           <Ionicons name="checkmark" size={22} color="#FFFFFF" /><Text style={styles.saveText}>{saving ? t('common.saving') : t('common.update')}</Text>
         </TouchableOpacity>

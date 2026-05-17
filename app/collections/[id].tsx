@@ -9,6 +9,7 @@ import { useTranslation } from '../../src/i18n';
 import { useCollectionStore } from '../../src/stores/collectionStore';
 import { usePaymentStore } from '../../src/stores/paymentStore';
 import { useTheme } from '../../src/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatDate } from '../../src/utils/dateUtils';
 import { formatCurrency } from '../../src/utils/formatters';
 import type { RecurrenceConfig } from '../../src/types';
@@ -16,6 +17,7 @@ import type { RecurrenceConfig } from '../../src/types';
 export default function CollectionDetailScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { payments, loadPayments } = usePaymentStore();
   const { getCollection, deleteCollection } = useCollectionStore();
@@ -126,7 +128,7 @@ export default function CollectionDetailScreen() {
         <View style={{ height: 80 }} />
       </ScrollView>
       {hasRemaining && (
-        <TouchableOpacity style={styles.fab} onPress={() => router.push(`/payments/new/${id}`)}>
+        <TouchableOpacity style={[styles.fab, { bottom: insets.bottom + 20 }]} onPress={() => router.push(`/payments/new/${id}`)}>
           <Ionicons name="add" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       )}

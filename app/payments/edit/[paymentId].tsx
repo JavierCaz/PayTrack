@@ -6,11 +6,13 @@ import DatePickerField from '../../../components/DatePickerField';
 import { usePaymentStore } from '../../../src/stores/paymentStore';
 import { useTranslation } from '../../../src/i18n';
 import { useTheme } from '../../../src/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatCurrency } from '../../../src/utils/formatters';
 
 export default function EditPaymentScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { paymentId } = useLocalSearchParams<{ paymentId: string }>();
   const { getPayment, updatePayment, deletePayment } = usePaymentStore();
 
@@ -102,7 +104,7 @@ export default function EditPaymentScreen() {
           <Ionicons name="trash-outline" size={20} color={colors.danger} /><Text style={styles.deleteText}>{t('common.delete')}</Text>
         </TouchableOpacity>
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
           <Ionicons name="checkmark-circle" size={22} color="#FFFFFF" /><Text style={styles.saveText}>{saving ? t('common.saving') : t('common.update')}</Text>
         </TouchableOpacity>

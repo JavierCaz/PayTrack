@@ -12,10 +12,12 @@ import { useTranslation } from '../../src/i18n';
 import { useClientStore } from '../../src/stores/clientStore';
 import { useCollectionStore } from '../../src/stores/collectionStore';
 import { useTheme } from '../../src/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ClientDetailScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { clients, allClients, deleteClient, blacklistClient, unblacklistClient } = useClientStore();
   const { loadClientCollectionsWithMeta } = useCollectionStore();
@@ -66,7 +68,7 @@ export default function ClientDetailScreen() {
   const filteredCollections = useMemo(() => {
     let result = collections;
     if (filterStatus !== 'all') result = result.filter(c => c.status === filterStatus);
-    if (searchQuery) result = result.filter(c => c.productName.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (searchQuery) result = result.filter(c => c.productName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(searchQuery.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()));
     return result;
   }, [collections, searchQuery, filterStatus]);
 
@@ -188,7 +190,7 @@ export default function ClientDetailScreen() {
           </View>
         </View>
       </Modal>
-      <TouchableOpacity style={styles.fab} onPress={() => router.push(`/collections/new/${client.id}`)}>
+      <TouchableOpacity style={[styles.fab, { bottom: insets.bottom + 20 }]} onPress={() => router.push(`/collections/new/${client.id}`)}>
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </TouchableOpacity>
     </View>

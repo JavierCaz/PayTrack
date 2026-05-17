@@ -7,12 +7,14 @@ import { usePaymentStore } from '../../../src/stores/paymentStore';
 import { useCollectionStore } from '../../../src/stores/collectionStore';
 import { useTranslation } from '../../../src/i18n';
 import { useTheme } from '../../../src/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatCurrency } from '../../../src/utils/formatters';
 import dayjs from 'dayjs';
 
 export default function RecordPaymentScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { collectionId } = useLocalSearchParams<{ collectionId: string }>();
   const { recordPayment } = usePaymentStore();
   const { getCollection } = useCollectionStore();
@@ -83,7 +85,7 @@ export default function RecordPaymentScreen() {
           <TextInput style={[styles.input, styles.textArea]} value={notes} onChangeText={setNotes} placeholder={t('payment.notesPlaceholder')} placeholderTextColor={colors.textTertiary} multiline numberOfLines={3} />
         </View>
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleRecord} disabled={saving}>
           <Ionicons name="checkmark-circle" size={22} color="#FFFFFF" /><Text style={styles.saveText}>{saving ? t('common.saving') : t('payment.record')}</Text>
         </TouchableOpacity>
