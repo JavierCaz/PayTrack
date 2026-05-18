@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as DocumentPicker from 'expo-document-picker';
-import { useMemo, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert, Switch, ActivityIndicator, Modal } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Switch, ActivityIndicator, Modal, ScrollView } from 'react-native';
 import { useTranslation } from '../src/i18n';
 import { exportBackup, importBackup } from '../src/services/backupService';
+import { getSetting, setSetting } from '../src/services/settingsService';
 import { useTheme } from '../src/theme';
 
 export default function SettingsScreen() {
@@ -12,6 +13,14 @@ export default function SettingsScreen() {
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
   const { colors, isDark, setDarkMode } = useTheme();
   const [importing, setImporting] = useState(false);
+  const [interestPercent, setInterestPercent] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const val = await getSetting('interest_percentage');
+      setInterestPercent(val ? String(parseFloat(val) * 100) : '35');
+    })();
+  }, []);
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background, paddingTop: 16 },
@@ -41,7 +50,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
         <View style={styles.option}>
@@ -67,6 +76,48 @@ export default function SettingsScreen() {
             thumbColor={isDark ? colors.primary : colors.textTertiary}
           />
           <Text style={[styles.toggleLabel, { color: isDark ? colors.primary : colors.textTertiary, fontWeight: isDark ? '700' : '400' }]}>{t('settings.darkMode')}</Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('settings.interest')}</Text>
+        <View style={styles.option}>
+          <View style={[styles.iconBox, { backgroundColor: colors.infoBg }]}>
+            <Ionicons name="percent-outline" size={24} color={colors.primary} />
+          </View>
+          <View style={styles.optionInfo}>
+            <Text style={styles.optionTitle}>{t('settings.interestLabel')}</Text>
+            <Text style={styles.optionDesc}>{t('settings.interestDesc')}</Text>
+          </View>
+          <TextInput
+            style={{
+              backgroundColor: colors.chipBg,
+              color: colors.text,
+              fontSize: 16,
+              fontWeight: '700',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              width: 72,
+              textAlign: 'center',
+            }}
+            value={interestPercent}
+            onChangeText={(val) => {
+              const cleaned = val.replace(/[^0-9.]/g, '');
+              setInterestPercent(cleaned);
+            }}
+            onEndEditing={async () => {
+              const num = parseFloat(interestPercent);
+              if (!isNaN(num) && num >= 0) {
+                const decimal = (num / 100).toFixed(4);
+                await setSetting('interest_percentage', decimal);
+              }
+            }}
+            keyboardType="numeric"
+            placeholder="35"
+            placeholderTextColor={colors.textTertiary}
+          />
+          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textSecondary }}>%</Text>
         </View>
       </View>
 
@@ -139,6 +190,6 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }

@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import { dbQuery, withTransaction, type SQLiteDatabase } from '../database/database';
 import { Payment as PaymentRow, generateId, nowISO } from '../types';
 import { _updateCollectionStatus } from './collectionService';
+import { getSetting } from './settingsService';
 
 function rowToPayment(row: any): PaymentRow {
   return {
@@ -91,7 +92,11 @@ export async function getDashboardStats(): Promise<{
   activeCollections: number; completedCollections: number; overdueCollections: number;
   totalOutstanding: number; monthlyIncome: number; todayIncome: number; weekIncome: number; yearIncome: number;
   activeClients: number; blacklistedClients: number;
+  realEarnings: number; totalInvestment: number; interestPercentage: number;
 }> {
+  const interestStr = await getSetting('interest_percentage');
+  const interestPercentage = parseFloat(interestStr || '0.35');
+
   return dbQuery(async (db) => {
     const now = dayjs();
     const todayStr = now.format('YYYY-MM-DD');
@@ -134,15 +139,21 @@ export async function getDashboardStats(): Promise<{
       )`
     );
     const blacklistedClients = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM clients WHERE blacklisted = 1");
+
+    const totalPaidOutValue = paidOut?.total || 0;
+    const totalInvestment = interestPercentage > 0 ? totalPaidOutValue / (1 + interestPercentage) : totalPaidOutValue;
+    const realEarnings = totalPaidOutValue - totalInvestment;
+
     return {
       totalClients: totalClients?.count || 0, totalCollections: totalCollections?.count || 0,
       totalPayments: totalPayments?.count || 0, totalPaymentsSum: paymentsSum?.total || 0,
-      totalPaidOut: paidOut?.total || 0, totalRemainder: globalRemainder?.total || 0,
+      totalPaidOut: totalPaidOutValue, totalRemainder: globalRemainder?.total || 0,
       activeCollections: activeColl?.count || 0, completedCollections: completedColl?.count || 0,
       overdueCollections: overdueColl?.count || 0, totalOutstanding: outstanding?.total || 0,
       monthlyIncome: monthlyIncome?.total || 0, todayIncome: todayIncome?.total || 0,
       weekIncome: weekIncome?.total || 0, yearIncome: yearIncome?.total || 0,
       activeClients: activeClients?.count || 0, blacklistedClients: blacklistedClients?.count || 0,
+      realEarnings, totalInvestment, interestPercentage,
     };
   });
 }

@@ -85,12 +85,16 @@ export default function Dashboard() {
         </View>
       </View>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('dashboard.sectionPayments')}</Text>
+        <Text style={styles.sectionTitle}>{t('dashboard.sectionFinancials')}</Text>
         <View style={styles.statsGrid}>
           <View style={styles.totalsRow}>
-            <StatCard title={t('dashboard.totalPaymentsSum')} value={formatCurrency(stats.totalPaymentsSum, 0)} icon="card-outline" color={colors.success} />
             <StatCard title={t('dashboard.totalPaidOut')} value={formatCurrency(stats.totalPaidOut, 0)} icon="checkmark-circle-outline" color={colors.success} />
             <StatCard title={t('dashboard.totalRemainder')} value={formatCurrency(stats.totalRemainder, 0)} icon="alert-circle-outline" color={colors.warning} />
+            <StatCard title={t('dashboard.totalGross')} value={formatCurrency(stats.totalPaymentsSum + stats.totalRemainder, 0)} icon="calculator-outline" color={colors.primary} />
+          </View>
+          <View style={styles.totalsRow}>
+            <StatCard title={t('dashboard.totalInvestment')} value={formatCurrency(stats.totalInvestment, 0)} icon="trending-down-outline" color={colors.warning} />
+            <StatCard title={t('dashboard.realEarnings')} value={formatCurrency(stats.realEarnings, 0)} icon="trending-up-outline" color={colors.success} />
           </View>
         </View>
       </View>

@@ -102,6 +102,9 @@ export interface DashboardStats {
   yearIncome: number;
   activeClients: number;
   blacklistedClients: number;
+  realEarnings: number;
+  totalInvestment: number;
+  interestPercentage: number;
 }
 
 export interface MonthlyIncome {
