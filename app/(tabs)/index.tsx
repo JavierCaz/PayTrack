@@ -34,6 +34,12 @@ export default function Dashboard() {
     }
   }, [period, stats]);
 
+  const periodEarnings = useMemo(() => {
+    if (!stats) return 0;
+    const pct = stats.interestPercentage || 0.35;
+    return pct > 0 ? periodIncome * (pct / (1 + pct)) : periodIncome;
+  }, [periodIncome, stats]);
+
   const periods: Period[] = ['today', 'week', 'month', 'year'];
 
   const styles = useMemo(() => StyleSheet.create({
@@ -121,6 +127,11 @@ export default function Dashboard() {
         <View style={[styles.incomeCard, { marginTop: 10 }]}>
           <View style={styles.incomeInfo}>
             <Text style={styles.incomeAmount}>{formatCurrency(periodIncome)}</Text>
+            <Text style={styles.incomeLabel}>{t('dashboard.totalPaidOut')}</Text>
+          </View>
+          <View style={[styles.incomeInfo, { paddingTop: 4 }]}>
+            <Text style={[styles.incomeAmount, { fontSize: 18, color: colors.success }]}>{formatCurrency(periodEarnings)}</Text>
+            <Text style={styles.incomeLabel}>{t('dashboard.realEarnings')}</Text>
           </View>
         </View>
         <View style={[styles.incomeCard, { marginTop: 8 }]}>

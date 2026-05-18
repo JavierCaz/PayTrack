@@ -159,6 +159,16 @@ export async function getDashboardStats(): Promise<{
 }
 
 export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'year'): Promise<IncomeDataPoint[]> {
+  const interestStr = await getSetting('interest_percentage');
+  const interestPct = parseFloat(interestStr || '0.35');
+
+  function withEarnings(data: { label: string; amount: number }[]): IncomeDataPoint[] {
+    return data.map(d => ({
+      ...d,
+      earnings: interestPct > 0 ? d.amount * (interestPct / (1 + interestPct)) : d.amount,
+    }));
+  }
+
   return dbQuery(async (db) => {
     const now = dayjs();
 
@@ -173,10 +183,10 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
       );
       const map = new Map(rows.map(r => [r.paid_date, r.amount]));
       const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      return labels.map((label, i) => ({
+      return withEarnings(labels.map((label, i) => ({
         label,
         amount: map.get(weekStart.add(i, 'day').format('YYYY-MM-DD')) || 0,
-      }));
+      })));
     }
 
     if (period === 'week') {
@@ -195,10 +205,10 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
         weekMap.set(weekIndex, (weekMap.get(weekIndex) || 0) + row.amount);
       }
       const numWeeks = Math.ceil(monthEnd.date() / 7);
-      return Array.from({ length: numWeeks }, (_, i) => ({
+      return withEarnings(Array.from({ length: numWeeks }, (_, i) => ({
         label: `W${i + 1}`,
         amount: weekMap.get(i) || 0,
-      }));
+      })));
     }
 
     if (period === 'month') {
@@ -212,10 +222,10 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
       );
       const map = new Map(rows.map(r => [r.month_num, r.amount]));
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return monthNames.map((name, i) => ({
+      return withEarnings(monthNames.map((name, i) => ({
         label: name,
         amount: map.get(String(i + 1).padStart(2, '0')) || 0,
-      }));
+      })));
     }
 
     // year
@@ -223,6 +233,6 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
       `SELECT strftime('%Y', paid_date) as year, COALESCE(SUM(paid_amount), 0) as amount
        FROM payments GROUP BY year ORDER BY year`
     );
-    return rows.map(r => ({ label: r.year, amount: r.amount }));
+    return withEarnings(rows.map(r => ({ label: r.year, amount: r.amount })));
   });
 }

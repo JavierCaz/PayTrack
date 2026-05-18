@@ -110,6 +110,7 @@ export interface DashboardStats {
 export interface IncomeDataPoint {
   label: string;
   amount: number;
+  earnings: number;
 }
 
 export interface MonthlyIncome {

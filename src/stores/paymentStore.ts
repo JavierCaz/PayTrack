@@ -24,6 +24,7 @@ interface PaymentState {
     yearIncome: number;
     activeClients: number;
     blacklistedClients: number;
+    interestPercentage: number;
   } | null;
   chartData: IncomeDataPoint[];
   loadPayments: (collectionId: string) => Promise<void>;
