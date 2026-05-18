@@ -1,6 +1,6 @@
 import { dbQuery, withTransaction } from '../database/database';
 import { Client as ClientRow, generateId, nowISO, parseRecurrence, serializeRecurrence, type RecurrenceConfig } from '../types';
-import { getNthWeekday } from '../utils/dateUtils';
+import { isClientPending, recurrenceStrategies } from '../recurrence/strategies';
 import dayjs from 'dayjs';
 
 interface ClientData {
@@ -66,11 +66,6 @@ async function getPendingClientIds(db: any): Promise<Set<string>> {
     paidDatesByCollection.get(p.collection_id)!.push(p.paid_date);
   }
 
-  // Returns true if any payment date falls within [periodStart, periodEnd] inclusive
-  function hasPaidInPeriod(paidDates: string[], periodStart: string, periodEnd: string): boolean {
-    return paidDates.some(d => d >= periodStart && d <= periodEnd);
-  }
-
   const pendingClients = new Set<string>();
   const today = dayjs();
 
@@ -78,72 +73,15 @@ async function getPendingClientIds(db: any): Promise<Set<string>> {
     const recurrence: RecurrenceConfig = parseRecurrence(row.payment_days || '1,15');
     const start = dayjs(row.start_date || today);
     const paidDates = paidDatesByCollection.get(row.id) ?? [];
-    const lastPaidDate = paidDates.length > 0 ? paidDates[paidDates.length - 1] : null;
 
-    if (recurrence.type === 'weekly') {
-      const sortedDays = [...recurrence.weekDays].sort();
-      if (sortedDays.length === 0) continue;
-      const mostRecentDay = [...sortedDays].reverse().find((d: number) => d <= today.day());
-      let expectedDate: dayjs.Dayjs;
-      if (mostRecentDay !== undefined) {
-        expectedDate = today.day(mostRecentDay);
-      } else {
-        expectedDate = today.subtract(1, 'week').day(sortedDays[sortedDays.length - 1]);
-      }
-      if (expectedDate.isAfter(today)) {
-        expectedDate = expectedDate.subtract(1, 'week');
-      }
-      if (expectedDate.isBefore(start, 'day')) continue;
-      const expectedDateStr = expectedDate.format('YYYY-MM-DD');
-      if (!lastPaidDate || lastPaidDate < expectedDateStr) {
-        pendingClients.add(row.client_id);
-      }
-      continue;
+    const strategy = recurrenceStrategies[recurrence.type];
+    if (!strategy) continue;
+
+    const periods = strategy.buildPeriods(today, start, recurrence);
+
+    if (isClientPending(periods, paidDates, today, start)) {
+      pendingClients.add(row.client_id);
     }
-
-    if (recurrence.type === 'monthly_weekday') {
-      if (recurrence.monthWeekday.length === 0) continue;
-      let isPending = false;
-      for (const { week, day } of recurrence.monthWeekday) {
-        const occurrence = getNthWeekday(today.year(), today.month(), week, day);
-        if (occurrence.isAfter(today, 'day')) continue;
-        if (occurrence.isBefore(start, 'day')) continue;
-        const occurrenceStr = occurrence.format('YYYY-MM-DD');
-        const periodEnd = today.endOf('month').format('YYYY-MM-DD');
-        if (!hasPaidInPeriod(paidDates, occurrenceStr, periodEnd)) {
-          isPending = true;
-          break;
-        }
-      }
-      if (isPending) pendingClients.add(row.client_id);
-      continue;
-    }
-
-    // monthly: check ALL configured days (not capped by paymentsPerMonth)
-    // so that every period is independently verified
-    const paymentDays = [...recurrence.monthDays].sort((a: number, b: number) => a - b);
-    if (paymentDays.length === 0) continue;
-
-    let isPending = false;
-    for (let i = 0; i < paymentDays.length; i++) {
-      const day = paymentDays[i];
-      const occurrence = dayjs(new Date(today.year(), today.month(), day));
-      if (occurrence.isAfter(today, 'day')) continue;
-      if (occurrence.isBefore(start, 'day')) continue;
-
-      // Period ends the day before the next payment day, or end of month for the last day
-      const nextDay = paymentDays[i + 1];
-      const periodEnd = nextDay !== undefined
-        ? dayjs(new Date(today.year(), today.month(), nextDay)).subtract(1, 'day').format('YYYY-MM-DD')
-        : today.endOf('month').format('YYYY-MM-DD');
-      const periodStart = occurrence.format('YYYY-MM-DD');
-
-      if (!hasPaidInPeriod(paidDates, periodStart, periodEnd)) {
-        isPending = true;
-        break;
-      }
-    }
-    if (isPending) pendingClients.add(row.client_id);
   }
 
   return pendingClients;

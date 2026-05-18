@@ -21,7 +21,7 @@ export default function NewClientScreen() {
 
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('monthly');
   const [monthDays, setMonthDays] = useState('1,15');
-  const [weekDays, setWeekDays] = useState<number[]>([]);
+  const [weekDay, setWeekDay] = useState<number | null>(null);
   const [monthWeekday, setMonthWeekday] = useState<{ week: number; day: number }>({ week: 0, day: 1 });
 
   const styles = useMemo(() => StyleSheet.create({
@@ -50,18 +50,14 @@ export default function NewClientScreen() {
     saveText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
   }), [colors]);
 
-  const toggleWeekDay = (d: number) => {
-    setWeekDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
-  };
-
   const buildDefaultRecurrence = (): RecurrenceConfig => {
     if (recurrenceType === 'monthly') {
       const days = monthDays.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d > 0 && d <= 31);
       return { type: 'monthly', monthDays: days.length > 0 ? days : [1, 15], weekDays: [], monthWeekday: [] };
     }
     if (recurrenceType === 'weekly') {
-      if (weekDays.length === 0) return { type: 'monthly', monthDays: [1, 15], weekDays: [], monthWeekday: [] };
-      return { type: 'weekly', monthDays: [], weekDays, monthWeekday: [] };
+      if (weekDay === null) return { type: 'monthly', monthDays: [1, 15], weekDays: [], monthWeekday: [] };
+      return { type: 'weekly', monthDays: [], weekDays: [weekDay], monthWeekday: [] };
     }
     return { type: 'monthly_weekday', monthDays: [], weekDays: [], monthWeekday: [monthWeekday] };
   };
@@ -127,8 +123,8 @@ export default function NewClientScreen() {
             <Text style={styles.label}>{t('collection.recurrenceWeekDaysLabel')}</Text>
             <View style={styles.chipRow}>
               {[0, 1, 2, 3, 4, 5, 6].map(d => (
-                <TouchableOpacity key={d} style={[styles.chip, weekDays.includes(d) && styles.chipActive]} onPress={() => toggleWeekDay(d)}>
-                  <Text style={[styles.chipText, weekDays.includes(d) && styles.chipTextActive]}>{weekLabels[d]}</Text>
+                <TouchableOpacity key={d} style={[styles.chip, weekDay === d && styles.chipActive]} onPress={() => setWeekDay(d)}>
+                  <Text style={[styles.chipText, weekDay === d && styles.chipTextActive]}>{weekLabels[d]}</Text>
                 </TouchableOpacity>
               ))}
             </View>
