@@ -45,7 +45,7 @@ export default function NewCollectionScreen() {
 
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('monthly');
   const [monthDays, setMonthDays] = useState('1,15');
-  const [weekDays, setWeekDays] = useState<number[]>([]);
+  const [weekDay, setWeekDay] = useState<number | null>(null);
   const [monthWeekday, setMonthWeekday] = useState<{ week: number; day: number }>({ week: 0, day: 1 });
   const [productName, setProductName] = useState('');
   const [totalPrice, setTotalPrice] = useState('');
@@ -61,15 +61,11 @@ export default function NewCollectionScreen() {
         const rec = client.defaultRecurrence;
         setRecurrenceType(rec.type);
         if (rec.type === 'monthly' && rec.monthDays.length > 0) setMonthDays(rec.monthDays.join(','));
-        if (rec.type === 'weekly') setWeekDays(rec.weekDays);
+        if (rec.type === 'weekly') setWeekDay(rec.weekDays[0] ?? null);
         if (rec.type === 'monthly_weekday' && rec.monthWeekday.length > 0) setMonthWeekday(rec.monthWeekday[0]);
       }
     });
   }, [clientId]);
-
-  const toggleWeekDay = (d: number) => {
-    setWeekDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
-  };
 
   const buildRecurrence = (): RecurrenceConfig | null => {
     if (recurrenceType === 'monthly') {
@@ -78,8 +74,8 @@ export default function NewCollectionScreen() {
       return { type: 'monthly', monthDays: days, weekDays: [], monthWeekday: [] };
     }
     if (recurrenceType === 'weekly') {
-      if (weekDays.length === 0) { Alert.alert(t('common.error'), t('collection.paymentDaysError')); return null; }
-      return { type: 'weekly', monthDays: [], weekDays, monthWeekday: [] };
+      if (weekDay === null) { Alert.alert(t('common.error'), t('collection.paymentDaysError')); return null; }
+      return { type: 'weekly', monthDays: [], weekDays: [weekDay], monthWeekday: [] };
     }
     return { type: 'monthly_weekday', monthDays: [], weekDays: [], monthWeekday: [monthWeekday] };
   };
@@ -146,10 +142,10 @@ export default function NewCollectionScreen() {
               {[0, 1, 2, 3, 4, 5, 6].map(d => (
                 <TouchableOpacity
                   key={d}
-                  style={[styles.chip, weekDays.includes(d) && styles.chipActive]}
-                  onPress={() => toggleWeekDay(d)}
+                  style={[styles.chip, weekDay === d && styles.chipActive]}
+                  onPress={() => setWeekDay(d)}
                 >
-                  <Text style={[styles.chipText, weekDays.includes(d) && styles.chipTextActive]}>{weekLabels[d]}</Text>
+                  <Text style={[styles.chipText, weekDay === d && styles.chipTextActive]}>{weekLabels[d]}</Text>
                 </TouchableOpacity>
               ))}
             </View>

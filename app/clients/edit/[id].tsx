@@ -50,7 +50,7 @@ export default function EditClientScreen() {
 
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('monthly');
   const [monthDays, setMonthDays] = useState('1,15');
-  const [weekDays, setWeekDays] = useState<number[]>([]);
+  const [weekDay, setWeekDay] = useState<number | null>(null);
   const [monthWeekday, setMonthWeekday] = useState<{ week: number; day: number }>({ week: 0, day: 1 });
 
   useEffect(() => {
@@ -63,15 +63,11 @@ export default function EditClientScreen() {
       if (rec) {
         setRecurrenceType(rec.type);
         if (rec.type === 'monthly') setMonthDays(rec.monthDays.length > 0 ? rec.monthDays.join(',') : '1,15');
-        if (rec.type === 'weekly') setWeekDays(rec.weekDays);
+        if (rec.type === 'weekly') setWeekDay(rec.weekDays[0] ?? null);
         if (rec.type === 'monthly_weekday' && rec.monthWeekday.length > 0) setMonthWeekday(rec.monthWeekday[0]);
       }
     }
   }, [client]);
-
-  const toggleWeekDay = (d: number) => {
-    setWeekDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
-  };
 
   const buildDefaultRecurrence = (): RecurrenceConfig => {
     if (recurrenceType === 'monthly') {
@@ -79,8 +75,8 @@ export default function EditClientScreen() {
       return { type: 'monthly', monthDays: days.length > 0 ? days : [1, 15], weekDays: [], monthWeekday: [] };
     }
     if (recurrenceType === 'weekly') {
-      if (weekDays.length === 0) return { type: 'monthly', monthDays: [1, 15], weekDays: [], monthWeekday: [] };
-      return { type: 'weekly', monthDays: [], weekDays, monthWeekday: [] };
+      if (weekDay === null) return { type: 'monthly', monthDays: [1, 15], weekDays: [], monthWeekday: [] };
+      return { type: 'weekly', monthDays: [], weekDays: [weekDay], monthWeekday: [] };
     }
     return { type: 'monthly_weekday', monthDays: [], weekDays: [], monthWeekday: [monthWeekday] };
   };
@@ -134,8 +130,8 @@ export default function EditClientScreen() {
             <Text style={styles.label}>{t('collection.recurrenceWeekDaysLabel')}</Text>
             <View style={styles.chipRow}>
               {[0, 1, 2, 3, 4, 5, 6].map(d => (
-                <TouchableOpacity key={d} style={[styles.chip, weekDays.includes(d) && styles.chipActive]} onPress={() => toggleWeekDay(d)}>
-                  <Text style={[styles.chipText, weekDays.includes(d) && styles.chipTextActive]}>{weekLabels[d]}</Text>
+                <TouchableOpacity key={d} style={[styles.chip, weekDay === d && styles.chipActive]} onPress={() => setWeekDay(d)}>
+                  <Text style={[styles.chipText, weekDay === d && styles.chipTextActive]}>{weekLabels[d]}</Text>
                 </TouchableOpacity>
               ))}
             </View>

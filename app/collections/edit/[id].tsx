@@ -52,7 +52,7 @@ export default function EditCollectionScreen() {
 
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('monthly');
   const [monthDays, setMonthDays] = useState('1,15');
-  const [weekDays, setWeekDays] = useState<number[]>([]);
+  const [weekDay, setWeekDay] = useState<number | null>(null);
   const [monthWeekday, setMonthWeekday] = useState<{ week: number; day: number }>({ week: 0, day: 1 });
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function EditCollectionScreen() {
         const rec = col.recurrence;
         setRecurrenceType(rec.type);
         setMonthDays(rec.monthDays.length > 0 ? rec.monthDays.join(',') : '1,15');
-        setWeekDays(rec.weekDays);
+        setWeekDay(rec.weekDays[0] ?? null);
         if (rec.monthWeekday.length > 0) {
           setMonthWeekday(rec.monthWeekday[0]);
         }
@@ -77,10 +77,6 @@ export default function EditCollectionScreen() {
     });
   }, [id, getCollection]);
 
-  const toggleWeekDay = (d: number) => {
-    setWeekDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
-  };
-
   const buildRecurrence = (): RecurrenceConfig | null => {
     if (recurrenceType === 'monthly') {
       const days = monthDays.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d > 0 && d <= 31);
@@ -88,8 +84,8 @@ export default function EditCollectionScreen() {
       return { type: 'monthly', monthDays: days, weekDays: [], monthWeekday: [] };
     }
     if (recurrenceType === 'weekly') {
-      if (weekDays.length === 0) { Alert.alert(t('common.error'), t('collection.paymentDaysError')); return null; }
-      return { type: 'weekly', monthDays: [], weekDays, monthWeekday: [] };
+      if (weekDay === null) { Alert.alert(t('common.error'), t('collection.paymentDaysError')); return null; }
+      return { type: 'weekly', monthDays: [], weekDays: [weekDay], monthWeekday: [] };
     }
     return { type: 'monthly_weekday', monthDays: [], weekDays: [], monthWeekday: [monthWeekday] };
   };
@@ -159,10 +155,10 @@ export default function EditCollectionScreen() {
               {[0, 1, 2, 3, 4, 5, 6].map(d => (
                 <TouchableOpacity
                   key={d}
-                  style={[styles.chip, weekDays.includes(d) && styles.chipActive]}
-                  onPress={() => toggleWeekDay(d)}
+                  style={[styles.chip, weekDay === d && styles.chipActive]}
+                  onPress={() => setWeekDay(d)}
                 >
-                  <Text style={[styles.chipText, weekDays.includes(d) && styles.chipTextActive]}>{weekLabels[d]}</Text>
+                  <Text style={[styles.chipText, weekDay === d && styles.chipTextActive]}>{weekLabels[d]}</Text>
                 </TouchableOpacity>
               ))}
             </View>
