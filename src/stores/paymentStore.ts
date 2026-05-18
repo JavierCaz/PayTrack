@@ -1,6 +1,8 @@
 import { create } from 'zustand';
-import { Payment } from '../types';
+import { Payment, IncomeDataPoint } from '../types';
 import * as paymentService from '../services/paymentService';
+
+type Period = 'today' | 'week' | 'month' | 'year';
 
 interface PaymentState {
   payments: Payment[];
@@ -23,18 +25,21 @@ interface PaymentState {
     activeClients: number;
     blacklistedClients: number;
   } | null;
+  chartData: IncomeDataPoint[];
   loadPayments: (collectionId: string) => Promise<void>;
   getPayment: (id: string) => Promise<any>;
   recordPayment: (collectionId: string, paidAmount: number, paidDate?: string, notes?: string) => Promise<string>;
   updatePayment: (paymentId: string, data: { paidAmount?: number; paidDate?: string; notes?: string; amount?: number }) => Promise<void>;
   deletePayment: (paymentId: string) => Promise<void>;
   loadDashboardStats: () => Promise<void>;
+  loadChartData: (period: Period) => Promise<void>;
 }
 
 export const usePaymentStore = create<PaymentState>((set) => ({
   payments: [],
   loading: false,
   stats: null,
+  chartData: [],
 
   loadPayments: async (collectionId) => {
     set({ loading: true });
@@ -69,6 +74,15 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       set({ stats });
     } catch (error) {
       console.error('Failed to load dashboard stats:', error);
+    }
+  },
+
+  loadChartData: async (period) => {
+    try {
+      const chartData = await paymentService.getIncomeChartData(period);
+      set({ chartData });
+    } catch (error) {
+      console.error('Failed to load chart data:', error);
     }
   },
 }));

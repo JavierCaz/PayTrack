@@ -1,9 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
-import { useMemo, useCallback, useState  } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatCard from '../../components/StatCard';
 import LoadingScreen from '../../components/LoadingScreen';
+import IncomeChart from '../../components/IncomeChart';
 import { usePaymentStore } from '../../src/stores/paymentStore';
 import { useTranslation } from '../../src/i18n';
 import { useTheme } from '../../src/theme';
@@ -15,9 +16,13 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { stats, loadDashboardStats } = usePaymentStore();
+  const { stats, chartData, loadDashboardStats, loadChartData } = usePaymentStore();
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState<Period>('month');
+
+  useEffect(() => {
+    loadChartData(period);
+  }, [period, loadChartData]);
 
   const periodIncome = useMemo(() => {
     if (!stats) return 0;
@@ -117,6 +122,9 @@ export default function Dashboard() {
           <View style={styles.incomeInfo}>
             <Text style={styles.incomeAmount}>{formatCurrency(periodIncome)}</Text>
           </View>
+        </View>
+        <View style={[styles.incomeCard, { marginTop: 8 }]}>
+          <IncomeChart data={chartData} />
         </View>
       </View>
     </ScrollView>

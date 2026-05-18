@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { dbQuery, withTransaction, type SQLiteDatabase } from '../database/database';
-import { Payment as PaymentRow, generateId, nowISO } from '../types';
+import { Payment as PaymentRow, generateId, nowISO, type IncomeDataPoint } from '../types';
 import { _updateCollectionStatus } from './collectionService';
 import { getSetting } from './settingsService';
 
@@ -155,5 +155,74 @@ export async function getDashboardStats(): Promise<{
       activeClients: activeClients?.count || 0, blacklistedClients: blacklistedClients?.count || 0,
       realEarnings, totalInvestment, interestPercentage,
     };
+  });
+}
+
+export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'year'): Promise<IncomeDataPoint[]> {
+  return dbQuery(async (db) => {
+    const now = dayjs();
+
+    if (period === 'today') {
+      const weekStart = now.subtract((now.day() + 6) % 7, 'day');
+      const weekEnd = weekStart.add(6, 'day');
+      const rows = await db.getAllAsync<any>(
+        `SELECT paid_date, COALESCE(SUM(paid_amount), 0) as amount
+         FROM payments WHERE paid_date >= ? AND paid_date <= ?
+         GROUP BY paid_date ORDER BY paid_date`,
+        [weekStart.format('YYYY-MM-DD'), weekEnd.format('YYYY-MM-DD')]
+      );
+      const map = new Map(rows.map(r => [r.paid_date, r.amount]));
+      const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return labels.map((label, i) => ({
+        label,
+        amount: map.get(weekStart.add(i, 'day').format('YYYY-MM-DD')) || 0,
+      }));
+    }
+
+    if (period === 'week') {
+      const monthStart = now.startOf('month');
+      const monthEnd = now.endOf('month');
+      const rows = await db.getAllAsync<any>(
+        `SELECT paid_date, COALESCE(SUM(paid_amount), 0) as amount
+         FROM payments WHERE paid_date >= ? AND paid_date <= ?
+         GROUP BY paid_date ORDER BY paid_date`,
+        [monthStart.format('YYYY-MM-DD'), monthEnd.format('YYYY-MM-DD')]
+      );
+      const weekMap = new Map<number, number>();
+      for (const row of rows) {
+        const dayOfMonth = dayjs(row.paid_date).date();
+        const weekIndex = Math.floor((dayOfMonth - 1) / 7);
+        weekMap.set(weekIndex, (weekMap.get(weekIndex) || 0) + row.amount);
+      }
+      const numWeeks = Math.ceil(monthEnd.date() / 7);
+      return Array.from({ length: numWeeks }, (_, i) => ({
+        label: `W${i + 1}`,
+        amount: weekMap.get(i) || 0,
+      }));
+    }
+
+    if (period === 'month') {
+      const yearStart = now.startOf('year');
+      const yearEnd = now.endOf('year');
+      const rows = await db.getAllAsync<any>(
+        `SELECT strftime('%m', paid_date) as month_num, COALESCE(SUM(paid_amount), 0) as amount
+         FROM payments WHERE paid_date >= ? AND paid_date <= ?
+         GROUP BY month_num ORDER BY month_num`,
+        [yearStart.format('YYYY-MM-DD'), yearEnd.format('YYYY-MM-DD')]
+      );
+      const map = new Map(rows.map(r => [r.month_num, r.amount]));
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return monthNames.map((name, i) => ({
+        label: name,
+        amount: map.get(String(i + 1).padStart(2, '0')) || 0,
+      }));
+    }
+
+    // year
+    const rows = await db.getAllAsync<any>(
+      `SELECT strftime('%Y', paid_date) as year, COALESCE(SUM(paid_amount), 0) as amount
+       FROM payments GROUP BY year ORDER BY year`
+    );
+    return rows.map(r => ({ label: r.year, amount: r.amount }));
   });
 }

@@ -107,6 +107,11 @@ export interface DashboardStats {
   interestPercentage: number;
 }
 
+export interface IncomeDataPoint {
+  label: string;
+  amount: number;
+}
+
 export interface MonthlyIncome {
   month: string;
   amount: number;
