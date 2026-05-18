@@ -102,6 +102,15 @@ export interface DashboardStats {
   yearIncome: number;
   activeClients: number;
   blacklistedClients: number;
+  realEarnings: number;
+  totalInvestment: number;
+  interestPercentage: number;
+}
+
+export interface IncomeDataPoint {
+  label: string;
+  amount: number;
+  earnings: number;
 }
 
 export interface MonthlyIncome {

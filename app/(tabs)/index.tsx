@@ -1,9 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
-import { useMemo, useCallback, useState  } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatCard from '../../components/StatCard';
 import LoadingScreen from '../../components/LoadingScreen';
+import IncomeChart from '../../components/IncomeChart';
 import { usePaymentStore } from '../../src/stores/paymentStore';
 import { useTranslation } from '../../src/i18n';
 import { useTheme } from '../../src/theme';
@@ -15,9 +16,13 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { stats, loadDashboardStats } = usePaymentStore();
+  const { stats, chartData, loadDashboardStats, loadChartData } = usePaymentStore();
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState<Period>('month');
+
+  useEffect(() => {
+    loadChartData(period);
+  }, [period, loadChartData]);
 
   const periodIncome = useMemo(() => {
     if (!stats) return 0;
@@ -28,6 +33,12 @@ export default function Dashboard() {
       case 'year': return stats.yearIncome;
     }
   }, [period, stats]);
+
+  const periodEarnings = useMemo(() => {
+    if (!stats) return 0;
+    const pct = stats.interestPercentage || 0.35;
+    return pct > 0 ? periodIncome * (pct / (1 + pct)) : periodIncome;
+  }, [periodIncome, stats]);
 
   const periods: Period[] = ['today', 'week', 'month', 'year'];
 
@@ -85,12 +96,16 @@ export default function Dashboard() {
         </View>
       </View>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('dashboard.sectionPayments')}</Text>
+        <Text style={styles.sectionTitle}>{t('dashboard.sectionFinancials')}</Text>
         <View style={styles.statsGrid}>
           <View style={styles.totalsRow}>
-            <StatCard title={t('dashboard.totalPaymentsSum')} value={formatCurrency(stats.totalPaymentsSum, 0)} icon="card-outline" color={colors.success} />
             <StatCard title={t('dashboard.totalPaidOut')} value={formatCurrency(stats.totalPaidOut, 0)} icon="checkmark-circle-outline" color={colors.success} />
             <StatCard title={t('dashboard.totalRemainder')} value={formatCurrency(stats.totalRemainder, 0)} icon="alert-circle-outline" color={colors.warning} />
+            <StatCard title={t('dashboard.totalGross')} value={formatCurrency(stats.totalPaymentsSum + stats.totalRemainder, 0)} icon="calculator-outline" color={colors.primary} />
+          </View>
+          <View style={styles.totalsRow}>
+            <StatCard title={t('dashboard.totalInvestment')} value={formatCurrency(stats.totalInvestment, 0)} icon="trending-down-outline" color={colors.warning} />
+            <StatCard title={t('dashboard.realEarnings')} value={formatCurrency(stats.realEarnings, 0)} icon="trending-up-outline" color={colors.success} />
           </View>
         </View>
       </View>
@@ -112,7 +127,15 @@ export default function Dashboard() {
         <View style={[styles.incomeCard, { marginTop: 10 }]}>
           <View style={styles.incomeInfo}>
             <Text style={styles.incomeAmount}>{formatCurrency(periodIncome)}</Text>
+            <Text style={styles.incomeLabel}>{t('dashboard.totalPaidOut')}</Text>
           </View>
+          <View style={[styles.incomeInfo, { paddingTop: 4 }]}>
+            <Text style={[styles.incomeAmount, { fontSize: 18, color: colors.success }]}>{formatCurrency(periodEarnings)}</Text>
+            <Text style={styles.incomeLabel}>{t('dashboard.realEarnings')}</Text>
+          </View>
+        </View>
+        <View style={[styles.incomeCard, { marginTop: 8 }]}>
+          <IncomeChart data={chartData} />
         </View>
       </View>
     </ScrollView>

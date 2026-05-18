@@ -1,7 +1,8 @@
 import dayjs from 'dayjs';
 import { dbQuery, withTransaction, type SQLiteDatabase } from '../database/database';
-import { Payment as PaymentRow, generateId, nowISO } from '../types';
+import { Payment as PaymentRow, generateId, nowISO, type IncomeDataPoint } from '../types';
 import { _updateCollectionStatus } from './collectionService';
+import { getSetting } from './settingsService';
 
 function rowToPayment(row: any): PaymentRow {
   return {
@@ -91,7 +92,11 @@ export async function getDashboardStats(): Promise<{
   activeCollections: number; completedCollections: number; overdueCollections: number;
   totalOutstanding: number; monthlyIncome: number; todayIncome: number; weekIncome: number; yearIncome: number;
   activeClients: number; blacklistedClients: number;
+  realEarnings: number; totalInvestment: number; interestPercentage: number;
 }> {
+  const interestStr = await getSetting('interest_percentage');
+  const interestPercentage = parseFloat(interestStr || '0.35');
+
   return dbQuery(async (db) => {
     const now = dayjs();
     const todayStr = now.format('YYYY-MM-DD');
@@ -134,15 +139,100 @@ export async function getDashboardStats(): Promise<{
       )`
     );
     const blacklistedClients = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM clients WHERE blacklisted = 1");
+
+    const totalPaidOutValue = paidOut?.total || 0;
+    const totalInvestment = interestPercentage > 0 ? totalPaidOutValue / (1 + interestPercentage) : totalPaidOutValue;
+    const realEarnings = totalPaidOutValue - totalInvestment;
+
     return {
       totalClients: totalClients?.count || 0, totalCollections: totalCollections?.count || 0,
       totalPayments: totalPayments?.count || 0, totalPaymentsSum: paymentsSum?.total || 0,
-      totalPaidOut: paidOut?.total || 0, totalRemainder: globalRemainder?.total || 0,
+      totalPaidOut: totalPaidOutValue, totalRemainder: globalRemainder?.total || 0,
       activeCollections: activeColl?.count || 0, completedCollections: completedColl?.count || 0,
       overdueCollections: overdueColl?.count || 0, totalOutstanding: outstanding?.total || 0,
       monthlyIncome: monthlyIncome?.total || 0, todayIncome: todayIncome?.total || 0,
       weekIncome: weekIncome?.total || 0, yearIncome: yearIncome?.total || 0,
       activeClients: activeClients?.count || 0, blacklistedClients: blacklistedClients?.count || 0,
+      realEarnings, totalInvestment, interestPercentage,
     };
+  });
+}
+
+export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'year'): Promise<IncomeDataPoint[]> {
+  const interestStr = await getSetting('interest_percentage');
+  const interestPct = parseFloat(interestStr || '0.35');
+
+  function withEarnings(data: { label: string; amount: number }[]): IncomeDataPoint[] {
+    return data.map(d => ({
+      ...d,
+      earnings: interestPct > 0 ? d.amount * (interestPct / (1 + interestPct)) : d.amount,
+    }));
+  }
+
+  return dbQuery(async (db) => {
+    const now = dayjs();
+
+    if (period === 'today') {
+      const weekStart = now.subtract((now.day() + 6) % 7, 'day');
+      const weekEnd = weekStart.add(6, 'day');
+      const rows = await db.getAllAsync<any>(
+        `SELECT paid_date, COALESCE(SUM(paid_amount), 0) as amount
+         FROM payments WHERE paid_date >= ? AND paid_date <= ?
+         GROUP BY paid_date ORDER BY paid_date`,
+        [weekStart.format('YYYY-MM-DD'), weekEnd.format('YYYY-MM-DD')]
+      );
+      const map = new Map(rows.map(r => [r.paid_date, r.amount]));
+      const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return withEarnings(labels.map((label, i) => ({
+        label,
+        amount: map.get(weekStart.add(i, 'day').format('YYYY-MM-DD')) || 0,
+      })));
+    }
+
+    if (period === 'week') {
+      const monthStart = now.startOf('month');
+      const monthEnd = now.endOf('month');
+      const rows = await db.getAllAsync<any>(
+        `SELECT paid_date, COALESCE(SUM(paid_amount), 0) as amount
+         FROM payments WHERE paid_date >= ? AND paid_date <= ?
+         GROUP BY paid_date ORDER BY paid_date`,
+        [monthStart.format('YYYY-MM-DD'), monthEnd.format('YYYY-MM-DD')]
+      );
+      const weekMap = new Map<number, number>();
+      for (const row of rows) {
+        const dayOfMonth = dayjs(row.paid_date).date();
+        const weekIndex = Math.floor((dayOfMonth - 1) / 7);
+        weekMap.set(weekIndex, (weekMap.get(weekIndex) || 0) + row.amount);
+      }
+      const numWeeks = Math.ceil(monthEnd.date() / 7);
+      return withEarnings(Array.from({ length: numWeeks }, (_, i) => ({
+        label: `W${i + 1}`,
+        amount: weekMap.get(i) || 0,
+      })));
+    }
+
+    if (period === 'month') {
+      const yearStart = now.startOf('year');
+      const yearEnd = now.endOf('year');
+      const rows = await db.getAllAsync<any>(
+        `SELECT strftime('%m', paid_date) as month_num, COALESCE(SUM(paid_amount), 0) as amount
+         FROM payments WHERE paid_date >= ? AND paid_date <= ?
+         GROUP BY month_num ORDER BY month_num`,
+        [yearStart.format('YYYY-MM-DD'), yearEnd.format('YYYY-MM-DD')]
+      );
+      const map = new Map(rows.map(r => [r.month_num, r.amount]));
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return withEarnings(monthNames.map((name, i) => ({
+        label: name,
+        amount: map.get(String(i + 1).padStart(2, '0')) || 0,
+      })));
+    }
+
+    // year
+    const rows = await db.getAllAsync<any>(
+      `SELECT strftime('%Y', paid_date) as year, COALESCE(SUM(paid_amount), 0) as amount
+       FROM payments GROUP BY year ORDER BY year`
+    );
+    return withEarnings(rows.map(r => ({ label: r.year, amount: r.amount })));
   });
 }
