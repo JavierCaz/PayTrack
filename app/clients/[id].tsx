@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CollectionCard from '../../components/CollectionCard';
 import EmptyState from '../../components/EmptyState';
@@ -12,6 +12,7 @@ import { useTranslation } from '../../src/i18n';
 import { useClientStore } from '../../src/stores/clientStore';
 import { useCollectionStore } from '../../src/stores/collectionStore';
 import { useTheme } from '../../src/theme';
+import { getSetting } from '../../src/services/settingsService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ClientDetailScreen() {
@@ -28,6 +29,15 @@ export default function ClientDetailScreen() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [blacklistModalVisible, setBlacklistModalVisible] = useState(false);
   const [blacklistNote, setBlacklistNote] = useState('');
+  const [interestPct, setInterestPct] = useState(0);
+  const [showEarnings, setShowEarnings] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const val = await getSetting('interest_percentage');
+      setInterestPct(parseFloat(val || '0.35'));
+    })();
+  }, []);
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -76,8 +86,11 @@ export default function ClientDetailScreen() {
     const totalCollectionsAmount = collections.reduce((sum, c) => sum + c.totalPrice, 0);
     const totalPaid = collections.reduce((sum, c) => sum + c.paidAmount, 0);
     const totalRemaining = collections.reduce((sum, c) => sum + c.remainingBalance, 0);
-    return { totalCollectionsAmount, totalPaid, totalRemaining };
-  }, [collections]);
+    const pct = interestPct;
+    const realEarnings = pct > 0 ? totalPaid * (pct / (1 + pct)) : totalPaid;
+    const investment = totalPaid - realEarnings;
+    return { totalCollectionsAmount, totalPaid, totalRemaining, realEarnings, investment };
+  }, [collections, interestPct]);
   const loadData = useCallback(async () => {
     if (!id) return;
     setCollections(await loadClientCollectionsWithMeta(id));
@@ -135,6 +148,22 @@ export default function ClientDetailScreen() {
                 <Text style={styles.summaryTotalLabel}>{t('collection.total')}</Text>
                 <Text style={styles.summaryTotalValue}>{formatCurrency(totals.totalPaid + totals.totalRemaining)}</Text>
               </View>
+              <TouchableOpacity style={styles.summaryRow} onPress={() => setShowEarnings(!showEarnings)}>
+                <Text style={[styles.summaryLabel, { flex: 1, fontSize: 12 }]}>{showEarnings ? t('common.showLess') : t('common.showMore')}</Text>
+                <Ionicons name={showEarnings ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+              {showEarnings && (
+                <>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>{t('dashboard.totalInvestment')}</Text>
+                    <Text style={[styles.summaryValue, { color: colors.warning }]}>{formatCurrency(totals.investment)}</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>{t('dashboard.realEarnings')}</Text>
+                    <Text style={[styles.summaryValue, { color: colors.success }]}>{formatCurrency(totals.realEarnings)}</Text>
+                  </View>
+                </>
+              )}
             </View>
           )}
         </View>

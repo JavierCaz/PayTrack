@@ -36,7 +36,7 @@ export default function Dashboard() {
 
   const periodEarnings = useMemo(() => {
     if (!stats) return 0;
-    const pct = stats.interestPercentage || 0.35;
+    const pct = stats.interestPercentage;
     return pct > 0 ? periodIncome * (pct / (1 + pct)) : periodIncome;
   }, [periodIncome, stats]);
 
