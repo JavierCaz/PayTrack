@@ -30,6 +30,7 @@ export interface Collection {
   clientId: string;
   productName: string;
   totalPrice: number;
+  conversionRate: number;
   numInstallments: number;
   paymentsPerMonth: number;
   paymentDays: number[];

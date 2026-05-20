@@ -83,9 +83,9 @@ export default function ClientDetailScreen() {
   }, [collections, searchQuery, filterStatus]);
 
   const totals = useMemo(() => {
-    const totalCollectionsAmount = collections.reduce((sum, c) => sum + c.totalPrice, 0);
-    const totalPaid = collections.reduce((sum, c) => sum + c.paidAmount, 0);
-    const totalRemaining = collections.reduce((sum, c) => sum + c.remainingBalance, 0);
+    const totalCollectionsAmount = collections.reduce((sum, c) => sum + (c.totalPrice * (c.conversionRate || 1)), 0);
+    const totalPaid = collections.reduce((sum, c) => sum + (c.paidAmount * (c.conversionRate || 1)), 0);
+    const totalRemaining = collections.reduce((sum, c) => sum + (c.remainingBalance * (c.conversionRate || 1)), 0);
     const pct = interestPct;
     const realEarnings = pct > 0 ? totalPaid * (pct / (1 + pct)) : totalPaid;
     const investment = totalPaid - realEarnings;

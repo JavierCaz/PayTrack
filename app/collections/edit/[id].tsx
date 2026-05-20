@@ -49,6 +49,7 @@ export default function EditCollectionScreen() {
   const [numInstallments, setNumInstallments] = useState('12');
   const [startDate, setStartDate] = useState('');
   const [installmentAmount, setInstallmentAmount] = useState('');
+  const [conversionRate, setConversionRate] = useState('1');
 
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('monthly');
   const [monthDays, setMonthDays] = useState('1,15');
@@ -64,6 +65,7 @@ export default function EditCollectionScreen() {
         setNumInstallments(col.numInstallments.toString());
         setStartDate(col.startDate);
         setInstallmentAmount(col.installmentAmount ? col.installmentAmount.toString() : '');
+        setConversionRate(col.conversionRate ? col.conversionRate.toString() : '1');
 
         const rec = col.recurrence;
         setRecurrenceType(rec.type);
@@ -100,7 +102,9 @@ export default function EditCollectionScreen() {
     setSaving(true);
     try {
       await updateCollection(id, {
-        productName: productName.trim(), totalPrice: parseFloat(totalPrice), numInstallments: parseInt(numInstallments),
+        productName: productName.trim(), totalPrice: parseFloat(totalPrice),
+        conversionRate: parseFloat(conversionRate) || 1,
+        numInstallments: parseInt(numInstallments),
         recurrence, startDate,
         installmentAmount: installmentAmount ? parseFloat(installmentAmount) : null,
       });
@@ -199,6 +203,7 @@ export default function EditCollectionScreen() {
         )}
 
         <View style={styles.field}><Text style={styles.label}>{t('collection.installmentAmount')}</Text><TextInput style={styles.input} value={installmentAmount} onChangeText={setInstallmentAmount} placeholder={t('collection.installmentAmountPlaceholder')} placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.installmentAmountHint')}</Text></View>
+        <View style={styles.field}><Text style={styles.label}>{t('collection.conversionRate')}</Text><TextInput style={styles.input} value={conversionRate} onChangeText={setConversionRate} placeholder="1" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.conversionRateHint')}</Text></View>
         <DatePickerField label={t('collection.startDate')} value={startDate} onChange={setStartDate} />
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>

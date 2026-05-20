@@ -52,6 +52,7 @@ export default function NewCollectionScreen() {
   const [numInstallments, setNumInstallments] = useState('12');
   const [startDate, setStartDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [installmentAmount, setInstallmentAmount] = useState('');
+  const [conversionRate, setConversionRate] = useState('1');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -90,6 +91,7 @@ export default function NewCollectionScreen() {
     try {
       await createCollection({
         clientId: clientId!, productName: productName.trim(), totalPrice: parseFloat(totalPrice),
+        conversionRate: parseFloat(conversionRate) || 1,
         numInstallments: parseInt(numInstallments),
         recurrence, startDate, installmentAmount: installmentAmount ? parseFloat(installmentAmount) : null,
       });
@@ -186,6 +188,7 @@ export default function NewCollectionScreen() {
         )}
 
         <View style={styles.field}><Text style={styles.label}>{t('collection.installmentAmount')}</Text><TextInput style={styles.input} value={installmentAmount} onChangeText={setInstallmentAmount} placeholder={t('collection.installmentAmountPlaceholder')} placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.installmentAmountHint')}</Text></View>
+        <View style={styles.field}><Text style={styles.label}>{t('collection.conversionRate')}</Text><TextInput style={styles.input} value={conversionRate} onChangeText={setConversionRate} placeholder="1" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.conversionRateHint')}</Text></View>
         <View style={styles.field}><Text style={styles.label}>{t('collection.startDate')}</Text><TextInput style={styles.input} value={startDate} onChangeText={setStartDate} placeholder={t('collection.startDatePlaceholder')} placeholderTextColor={colors.textTertiary} /><Text style={styles.hint}>{t('collection.startDateHint')}</Text></View>
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>

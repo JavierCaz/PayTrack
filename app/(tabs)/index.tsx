@@ -66,7 +66,8 @@ export default function Dashboard() {
 
   const loadData = useCallback(async () => {
     await loadDashboardStats();
-  }, [loadDashboardStats]);
+    await loadChartData(period);
+  }, [loadDashboardStats, loadChartData, period]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 

@@ -140,6 +140,8 @@ const es: Translation = {
   'collection.weeklyLabel': '{count}x/sem',
   'collection.weekdayLabel': '{count}/mes',
   'collection.startDate': 'Fecha de Inicio',
+  'collection.conversionRate': 'Tipo de Cambio',
+  'collection.conversionRateHint': 'Usa 1 para moneda local, o la tasa para MXN/USD etc.',
   'collection.startDateHint': 'Formato: YYYY-MM-DD (ej. 2026-05-01)',
   'collection.installmentAmount': 'Monto por Plazo',
   'collection.installmentAmountPlaceholder': 'Dejar vacío para usar el predeterminado',

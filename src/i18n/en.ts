@@ -138,6 +138,8 @@ const en = {
   'collection.weeklyLabel': '{count}x/week',
   'collection.weekdayLabel': '{count}/month',
   'collection.startDate': 'Start Date',
+  'collection.conversionRate': 'Exchange Rate',
+  'collection.conversionRateHint': 'Set to 1 for local currency, or the rate for MXN/USD etc.',
   'collection.startDateHint': 'Format: YYYY-MM-DD (e.g., 2026-05-01)',
   'collection.installmentAmount': 'Installment Amount',
   'collection.installmentAmountPlaceholder': 'Leave empty to use default',
