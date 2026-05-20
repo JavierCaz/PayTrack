@@ -15,6 +15,7 @@ interface CollectionState {
     clientId: string;
     productName: string;
     totalPrice: number;
+    conversionRate?: number;
     numInstallments: number;
     recurrence: RecurrenceConfig;
     startDate: string;
@@ -23,6 +24,7 @@ interface CollectionState {
   updateCollection: (id: string, data: {
     productName?: string;
     totalPrice?: number;
+    conversionRate?: number;
     numInstallments?: number;
     recurrence?: RecurrenceConfig;
     startDate?: string;

@@ -185,8 +185,9 @@ export async function importBackup(uri: string): Promise<void> {
 
       for (const collection of backup.collections) {
         await db.runAsync(
-          'INSERT INTO collections (id, client_id, product_name, total_price, num_installments, payment_days, start_date, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO collections (id, client_id, product_name, total_price, conversion_rate, num_installments, payment_days, start_date, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [collection.id, collection.client_id, collection.product_name, collection.total_price,
+           collection.conversion_rate ?? 1,
            collection.num_installments, collection.payment_days,
            collection.start_date, collection.status, collection.created_at, collection.updated_at]
         );

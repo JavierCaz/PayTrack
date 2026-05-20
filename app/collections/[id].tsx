@@ -78,6 +78,7 @@ export default function CollectionDetailScreen() {
   if (loading) return <LoadingScreen />;
   if (!collection) return <EmptyState icon="alert-circle" title={t('collection.notFound')} />;
 
+  const rate = collection.conversionRate || 1;
   const statusColor = collection.status === 'active' ? colors.statusActive : colors.statusCompleted;
   const hasRemaining = collection.remainingBalance > 0;
   const progress = collection.totalPrice > 0 ? (collection.paidAmount / collection.totalPrice) * 100 : 0;
@@ -101,9 +102,9 @@ export default function CollectionDetailScreen() {
           </View>
         </View>
         <View style={styles.statsRow}>
-          <View style={styles.stat}><Text style={styles.statLabel}>{t('collection.total')}</Text><Text style={styles.statValue}>{formatCurrency(collection.totalPrice)}</Text></View>
-          <View style={styles.stat}><Text style={styles.statLabel}>{t('collection.paid')}</Text><Text style={[styles.statValue, { color: colors.success }]}>{formatCurrency(collection.paidAmount)}</Text></View>
-          <View style={styles.stat}><Text style={styles.statLabel}>{t('collection.remaining')}</Text><Text style={[styles.statValue, { color: colors.danger }]}>{formatCurrency(collection.remainingBalance)}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>{t('collection.total')}</Text><Text style={styles.statValue}>{formatCurrency(collection.totalPrice * rate)}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>{t('collection.paid')}</Text><Text style={[styles.statValue, { color: colors.success }]}>{formatCurrency(collection.paidAmount * rate)}</Text></View>
+          <View style={styles.stat}><Text style={styles.statLabel}>{t('collection.remaining')}</Text><Text style={[styles.statValue, { color: colors.danger }]}>{formatCurrency(collection.remainingBalance * rate)}</Text></View>
         </View>
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}><View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%` }]} /></View>
@@ -113,6 +114,7 @@ export default function CollectionDetailScreen() {
           <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.startDateLabel')}</Text><Text style={styles.infoValue}>{formatDate(collection.startDate)}</Text></View>
           <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.installmentsLabel')}</Text><Text style={styles.infoValue}>{collection.numInstallments}</Text></View>
           <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.frequency')}</Text><Text style={styles.infoValue}>{getFrequencyLabel(collection.recurrence, collection.paymentsPerMonth)}</Text></View>
+          <View style={styles.infoItem}><Text style={styles.infoLabel}>{t('collection.conversionRate')}</Text><Text style={styles.infoValue}>{rate}x</Text></View>
         </View>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('collection.payments')} ({payments.length})</Text>

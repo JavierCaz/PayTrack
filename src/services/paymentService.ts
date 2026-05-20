@@ -111,24 +111,25 @@ export async function getDashboardStats(): Promise<{
     const totalClients = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM clients");
     const totalCollections = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections");
     const totalPayments = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM payments");
-    const paymentsSum = await db.getFirstAsync<any>("SELECT COALESCE(SUM(amount), 0) as total FROM payments");
-    const paidOut = await db.getFirstAsync<any>("SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments");
+    const paymentsSum = await db.getFirstAsync<any>("SELECT COALESCE(SUM(p.amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id");
+    const paidOut = await db.getFirstAsync<any>("SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id");
     const activeColl = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections WHERE status = 'active'");
     const completedColl = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections WHERE status = 'completed'");
     const overdueColl = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections WHERE status = 'overdue'");
-    const outstanding = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(c.total_price - COALESCE(paid.paid, 0)), 0) as total FROM collections c LEFT JOIN (SELECT collection_id, SUM(paid_amount) as paid FROM payments GROUP BY collection_id) paid ON paid.collection_id = c.id WHERE c.status != 'completed'`);
-    const monthlyIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE paid_date >= ? AND paid_date <= ?`, [monthStartStr, monthEndStr]);
-    const todayIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE paid_date = ?`, [todayStr]);
-    const weekIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE paid_date >= ? AND paid_date <= ?`, [weekStartStr, weekEndStr]);
-    const yearIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(paid_amount), 0) as total FROM payments WHERE paid_date >= ? AND paid_date <= ?`, [yearStartStr, yearEndStr]);
-    const globalRemainder = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(c.total_price - COALESCE(paid.paid, 0)), 0) as total FROM collections c LEFT JOIN (SELECT collection_id, SUM(paid_amount) as paid FROM payments GROUP BY collection_id) paid ON paid.collection_id = c.id`);
+    const outstanding = await db.getFirstAsync<any>(`SELECT COALESCE(SUM((c.total_price - COALESCE(paid.paid, 0))  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM collections c LEFT JOIN (SELECT collection_id, SUM(paid_amount) as paid FROM payments GROUP BY collection_id) paid ON paid.collection_id = c.id WHERE c.status != 'completed'`);
+    const monthlyIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date >= ? AND p.paid_date <= ?`, [monthStartStr, monthEndStr]);
+    const todayIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date = ?`, [todayStr]);
+    const weekIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date >= ? AND p.paid_date <= ?`, [weekStartStr, weekEndStr]);
+    const yearIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date >= ? AND p.paid_date <= ?`, [yearStartStr, yearEndStr]);
+    const globalRemainder = await db.getFirstAsync<any>(`SELECT COALESCE(SUM((c.total_price - COALESCE(paid.paid, 0))  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM collections c LEFT JOIN (SELECT collection_id, SUM(paid_amount) as paid FROM payments GROUP BY collection_id) paid ON paid.collection_id = c.id`);
     const activeClients = await db.getFirstAsync<any>(
       `SELECT COUNT(*) as count FROM (
         SELECT c.id
         FROM clients c
         LEFT JOIN (
-          SELECT col.id, col.client_id, col.total_price,
-            COALESCE(SUM(p.paid_amount), 0) as total_paid
+          SELECT col.id, col.client_id,
+            (col.total_price  * COALESCE(col.conversion_rate, 1.0)) as total_price,
+            COALESCE(SUM(p.paid_amount  * COALESCE(col.conversion_rate, 1.0)), 0) as total_paid
           FROM collections col
           LEFT JOIN payments p ON p.collection_id = col.id AND p.status = 'paid'
           GROUP BY col.id
@@ -176,9 +177,10 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
       const weekStart = now.subtract((now.day() + 6) % 7, 'day');
       const weekEnd = weekStart.add(6, 'day');
       const rows = await db.getAllAsync<any>(
-        `SELECT paid_date, COALESCE(SUM(paid_amount), 0) as amount
-         FROM payments WHERE paid_date >= ? AND paid_date <= ?
-         GROUP BY paid_date ORDER BY paid_date`,
+        `SELECT p.paid_date, COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as amount
+         FROM payments p JOIN collections c ON c.id = p.collection_id
+         WHERE p.paid_date >= ? AND p.paid_date <= ?
+         GROUP BY p.paid_date ORDER BY p.paid_date`,
         [weekStart.format('YYYY-MM-DD'), weekEnd.format('YYYY-MM-DD')]
       );
       const map = new Map(rows.map(r => [r.paid_date, r.amount]));
@@ -193,9 +195,10 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
       const monthStart = now.startOf('month');
       const monthEnd = now.endOf('month');
       const rows = await db.getAllAsync<any>(
-        `SELECT paid_date, COALESCE(SUM(paid_amount), 0) as amount
-         FROM payments WHERE paid_date >= ? AND paid_date <= ?
-         GROUP BY paid_date ORDER BY paid_date`,
+        `SELECT p.paid_date, COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as amount
+         FROM payments p JOIN collections c ON c.id = p.collection_id
+         WHERE p.paid_date >= ? AND p.paid_date <= ?
+         GROUP BY p.paid_date ORDER BY p.paid_date`,
         [monthStart.format('YYYY-MM-DD'), monthEnd.format('YYYY-MM-DD')]
       );
       const weekMap = new Map<number, number>();
@@ -215,8 +218,9 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
       const yearStart = now.startOf('year');
       const yearEnd = now.endOf('year');
       const rows = await db.getAllAsync<any>(
-        `SELECT strftime('%m', paid_date) as month_num, COALESCE(SUM(paid_amount), 0) as amount
-         FROM payments WHERE paid_date >= ? AND paid_date <= ?
+        `SELECT strftime('%m', p.paid_date) as month_num, COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as amount
+         FROM payments p JOIN collections c ON c.id = p.collection_id
+         WHERE p.paid_date >= ? AND p.paid_date <= ?
          GROUP BY month_num ORDER BY month_num`,
         [yearStart.format('YYYY-MM-DD'), yearEnd.format('YYYY-MM-DD')]
       );
@@ -230,8 +234,9 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
 
     // year
     const rows = await db.getAllAsync<any>(
-      `SELECT strftime('%Y', paid_date) as year, COALESCE(SUM(paid_amount), 0) as amount
-       FROM payments GROUP BY year ORDER BY year`
+      `SELECT strftime('%Y', p.paid_date) as year, COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as amount
+       FROM payments p JOIN collections c ON c.id = p.collection_id
+       GROUP BY year ORDER BY year`
     );
     return withEarnings(rows.map(r => ({ label: r.year, amount: r.amount })));
   });

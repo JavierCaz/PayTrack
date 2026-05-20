@@ -98,7 +98,7 @@ export default function EditPaymentScreen() {
           <TextInput style={[styles.input, styles.textArea]} value={notes} onChangeText={setNotes} placeholder={t('payment.notesPlaceholder')} placeholderTextColor={colors.textTertiary} multiline numberOfLines={3} />
         </View>
         <TouchableOpacity style={styles.receiptButton} onPress={() => router.push(`/receipts/${paymentId}`)}>
-          <Ionicons name="receipt-outline" size={20} color={colors.primary} /><Text style={styles.receiptText}>{t('receipt.share')}</Text>
+          <Ionicons name="receipt-outline" size={20} color={colors.primary} /><Text style={styles.receiptText}>{t('payment.viewReceipt')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
           <Ionicons name="trash-outline" size={20} color={colors.danger} /><Text style={styles.deleteText}>{t('common.delete')}</Text>

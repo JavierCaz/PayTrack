@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ReceiptTemplate from '../../components/ReceiptTemplate';
 import LoadingScreen from '../../components/LoadingScreen';
 import { getPaymentWithDetails } from '../../src/services/paymentService';
+import * as Clipboard from 'expo-clipboard';
 import { shareReceipt, saveReceiptToGallery } from '../../src/services/receiptService';
 import { useTranslation } from '../../src/i18n';
 import { useTheme } from '../../src/theme';
@@ -30,7 +31,14 @@ export default function ReceiptScreen() {
 
   useEffect(() => { if (!paymentId) return; getPaymentWithDetails(paymentId).then((data) => { setPayment(data); setLoading(false); }); }, [paymentId]);
 
-  const handleShare = async () => { setSharing(true); await shareReceipt(receiptRef); setSharing(false); };
+  const handleShare = async () => {
+    if (!payment) return;
+    setSharing(true);
+    const firstName = payment.clientName.split(' ')[0];
+    await Clipboard.setStringAsync(t('receipt.thankYouMessage', { name: firstName }));
+    await shareReceipt(receiptRef);
+    setSharing(false);
+  };
   const handleSave = async () => { setSharing(true); await saveReceiptToGallery(receiptRef); setSharing(false); };
 
   if (loading) return <LoadingScreen />;
