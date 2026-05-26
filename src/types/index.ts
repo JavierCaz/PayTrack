@@ -31,6 +31,7 @@ export interface Collection {
   productName: string;
   totalPrice: number;
   conversionRate: number;
+  interestRate: number;
   numInstallments: number;
   paymentsPerMonth: number;
   paymentDays: number[];

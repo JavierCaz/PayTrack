@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS collections (
   payment_days TEXT NOT NULL DEFAULT '1,15',
   start_date TEXT NOT NULL,
   installment_amount REAL,
+  interest_rate REAL,
   status TEXT NOT NULL DEFAULT 'active',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,

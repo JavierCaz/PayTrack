@@ -16,6 +16,7 @@ interface CollectionState {
     productName: string;
     totalPrice: number;
     conversionRate?: number;
+    interestRate?: number;
     numInstallments: number;
     recurrence: RecurrenceConfig;
     startDate: string;
@@ -25,6 +26,7 @@ interface CollectionState {
     productName?: string;
     totalPrice?: number;
     conversionRate?: number;
+    interestRate?: number;
     numInstallments?: number;
     recurrence?: RecurrenceConfig;
     startDate?: string;

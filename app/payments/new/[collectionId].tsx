@@ -44,7 +44,7 @@ export default function RecordPaymentScreen() {
     if (!collectionId) return;
     getCollection(collectionId).then((coll) => {
       setCollection(coll);
-      setPaidAmount((coll?.installmentAmount ?? 0).toString());
+      setPaidAmount(coll?.installmentAmount ? coll.installmentAmount.toString() : '');
       setLoading(false);
     });
   }, [collectionId, getCollection]);
@@ -78,7 +78,7 @@ export default function RecordPaymentScreen() {
         <DatePickerField label={t('payment.dateLabel')} value={paidDate} onChange={setPaidDate} />
         <View style={styles.field}>
           <Text style={styles.label}>{t('payment.amountPaid')}</Text>
-          <TextInput style={styles.input} value={paidAmount} onChangeText={setPaidAmount} placeholder="0.00" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" />
+          <TextInput style={styles.input} value={paidAmount} onChangeText={setPaidAmount} placeholder="0.00" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" autoFocus />
         </View>
         <View style={styles.field}>
           <Text style={styles.label}>{t('payment.notes')}</Text>

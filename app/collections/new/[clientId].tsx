@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dayjs from 'dayjs';
 import type { RecurrenceType, RecurrenceConfig } from '../../../src/types';
 import * as clientService from '../../../src/services/clientService';
+import { getSetting } from '../../../src/services/settingsService';
 
 export default function NewCollectionScreen() {
   const { t } = useTranslation();
@@ -53,6 +54,7 @@ export default function NewCollectionScreen() {
   const [startDate, setStartDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [installmentAmount, setInstallmentAmount] = useState('');
   const [conversionRate, setConversionRate] = useState('1');
+  const [interestRate, setInterestRate] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -65,6 +67,9 @@ export default function NewCollectionScreen() {
         if (rec.type === 'weekly') setWeekDay(rec.weekDays[0] ?? null);
         if (rec.type === 'monthly_weekday' && rec.monthWeekday.length > 0) setMonthWeekday(rec.monthWeekday[0]);
       }
+    });
+    getSetting('interest_percentage').then(val => {
+      setInterestRate(String(parseFloat(val!) * 100));
     });
   }, [clientId]);
 
@@ -85,6 +90,9 @@ export default function NewCollectionScreen() {
     if (!productName.trim()) { Alert.alert(t('common.required'), t('collection.productRequired')); return; }
     if (!totalPrice || parseFloat(totalPrice) <= 0) { Alert.alert(t('common.required'), t('collection.priceRequired')); return; }
     if (!numInstallments || parseInt(numInstallments) <= 0) { Alert.alert(t('common.required'), t('collection.installmentsRequired')); return; }
+    if (!conversionRate || parseFloat(conversionRate) <= 0) { Alert.alert(t('common.required'), t('collection.conversionRateRequired')); return; }
+    if (!startDate.trim()) { Alert.alert(t('common.required'), t('collection.startDateRequired')); return; }
+    if (!interestRate || parseFloat(interestRate) < 0) { Alert.alert(t('common.required'), t('collection.interestRateRequired')); return; }
     const recurrence = buildRecurrence();
     if (!recurrence) return;
     setSaving(true);
@@ -92,6 +100,7 @@ export default function NewCollectionScreen() {
       await createCollection({
         clientId: clientId!, productName: productName.trim(), totalPrice: parseFloat(totalPrice),
         conversionRate: parseFloat(conversionRate) || 1,
+        interestRate: interestRate ? parseFloat(interestRate) / 100 : 0,
         numInstallments: parseInt(numInstallments),
         recurrence, startDate, installmentAmount: installmentAmount ? parseFloat(installmentAmount) : null,
       });
@@ -131,7 +140,7 @@ export default function NewCollectionScreen() {
 
         {recurrenceType === 'monthly' && (
           <View style={styles.field}>
-            <Text style={styles.label}>{t('collection.recurrenceDaysLabel')}</Text>
+            <Text style={styles.label}>{t('collection.recurrenceDaysLabel')} *</Text>
             <TextInput style={styles.input} value={monthDays} onChangeText={setMonthDays} placeholder="1, 15" placeholderTextColor={colors.textTertiary} />
             <Text style={styles.hint}>{t('collection.recurrenceDaysHint')}</Text>
           </View>
@@ -187,9 +196,10 @@ export default function NewCollectionScreen() {
           </>
         )}
 
-        <View style={styles.field}><Text style={styles.label}>{t('collection.installmentAmount')}</Text><TextInput style={styles.input} value={installmentAmount} onChangeText={setInstallmentAmount} placeholder={t('collection.installmentAmountPlaceholder')} placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.installmentAmountHint')}</Text></View>
-        <View style={styles.field}><Text style={styles.label}>{t('collection.conversionRate')}</Text><TextInput style={styles.input} value={conversionRate} onChangeText={setConversionRate} placeholder="1" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.conversionRateHint')}</Text></View>
-        <View style={styles.field}><Text style={styles.label}>{t('collection.startDate')}</Text><TextInput style={styles.input} value={startDate} onChangeText={setStartDate} placeholder={t('collection.startDatePlaceholder')} placeholderTextColor={colors.textTertiary} /><Text style={styles.hint}>{t('collection.startDateHint')}</Text></View>
+        <View style={styles.field}><Text style={styles.label}>{t('collection.installmentAmount')}</Text><TextInput style={styles.input} value={installmentAmount} onChangeText={setInstallmentAmount} placeholder="" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.installmentAmountHint')}</Text></View>
+        <View style={styles.field}><Text style={styles.label}>{t('collection.conversionRate')} *</Text><TextInput style={styles.input} value={conversionRate} onChangeText={setConversionRate} placeholder="1" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.conversionRateHint')}</Text></View>
+        <View style={styles.field}><Text style={styles.label}>{t('collection.interestRate')} *</Text><View style={styles.row}><TextInput style={[styles.input, { flex: 1 }]} value={interestRate} onChangeText={(val) => setInterestRate(val.replace(/[^0-9.]/g, ''))} placeholder="" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={{ fontSize: 16, fontWeight: '600', color: colors.textSecondary, alignSelf: 'center' }}>%</Text></View><Text style={styles.hint}>{t('collection.interestRateHint')}</Text></View>
+        <View style={styles.field}><Text style={styles.label}>{t('collection.startDate')} *</Text><TextInput style={styles.input} value={startDate} onChangeText={setStartDate} placeholder={t('collection.startDatePlaceholder')} placeholderTextColor={colors.textTertiary} /><Text style={styles.hint}>{t('collection.startDateHint')}</Text></View>
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
