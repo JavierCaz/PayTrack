@@ -131,5 +131,8 @@ export async function initDatabase(): Promise<void> {
     try { await database.runAsync('ALTER TABLE collections ADD COLUMN installment_amount REAL'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE collections DROP COLUMN payments_per_month'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE collections ADD COLUMN conversion_rate REAL DEFAULT 1.0'); } catch (_) {}
+    try { await database.runAsync('ALTER TABLE collections ADD COLUMN interest_rate REAL'); } catch (_) {}
+    try { await database.runAsync('CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)'); } catch (_) {}
+    try { await database.runAsync("INSERT OR IGNORE INTO app_settings (key, value) VALUES ('interest_percentage', '0.35')"); } catch (_) {}
   });
 }

@@ -12,6 +12,7 @@ interface CollectionData {
   productName: string;
   totalPrice: number;
   conversionRate?: number;
+  interestRate?: number;
   numInstallments: number;
   recurrence: RecurrenceConfig;
   startDate: string;
@@ -33,6 +34,7 @@ function rowToCollection(row: any): CollectionRow {
     productName: row.product_name,
     totalPrice: row.total_price,
     conversionRate: row.conversion_rate ?? 1,
+    interestRate: row.interest_rate ?? 0,
     numInstallments: row.num_installments,
     paymentsPerMonth: getPaymentsPerMonthCount(recurrence),
     paymentDays: recurrence.type === 'monthly' ? recurrence.monthDays : [],
@@ -110,15 +112,15 @@ export async function createCollection(data: CollectionData): Promise<string> {
     const now = nowISO();
     const paymentDaysStr = serializeRecurrence(data.recurrence);
     await db.runAsync(
-      `INSERT INTO collections (id, client_id, product_name, total_price, conversion_rate, num_installments, payment_days, start_date, installment_amount, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
-      [id, data.clientId, data.productName, data.totalPrice, data.conversionRate ?? 1, data.numInstallments, paymentDaysStr, data.startDate, data.installmentAmount ?? null, now, now]
+      `INSERT INTO collections (id, client_id, product_name, total_price, conversion_rate, interest_rate, num_installments, payment_days, start_date, installment_amount, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+      [id, data.clientId, data.productName, data.totalPrice, data.conversionRate ?? 1, data.interestRate ?? null, data.numInstallments, paymentDaysStr, data.startDate, data.installmentAmount ?? null, now, now]
     );
     return id;
   });
 }
 
-export async function updateCollection(id: string, data: { productName?: string; totalPrice?: number; conversionRate?: number; numInstallments?: number; recurrence?: RecurrenceConfig; startDate?: string; installmentAmount?: number | null; status?: string }): Promise<void> {
+export async function updateCollection(id: string, data: { productName?: string; totalPrice?: number; conversionRate?: number; interestRate?: number; numInstallments?: number; recurrence?: RecurrenceConfig; startDate?: string; installmentAmount?: number | null; status?: string }): Promise<void> {
   return withTransaction(async (db) => {
     const now = nowISO();
     const sets: string[] = [];
@@ -126,6 +128,7 @@ export async function updateCollection(id: string, data: { productName?: string;
     if (data.productName !== undefined) { sets.push('product_name = ?'); values.push(data.productName); }
     if (data.totalPrice !== undefined) { sets.push('total_price = ?'); values.push(data.totalPrice); }
     if (data.conversionRate !== undefined) { sets.push('conversion_rate = ?'); values.push(data.conversionRate); }
+    if (data.interestRate !== undefined) { sets.push('interest_rate = ?'); values.push(data.interestRate); }
     if (data.numInstallments !== undefined) { sets.push('num_installments = ?'); values.push(data.numInstallments); }
     if (data.recurrence !== undefined) {
       sets.push('payment_days = ?'); values.push(serializeRecurrence(data.recurrence));

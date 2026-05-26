@@ -22,7 +22,7 @@ export default function SettingsScreen() {
   useEffect(() => {
     (async () => {
       const val = await getSetting('interest_percentage');
-      setInterestPercent(val ? String(parseFloat(val) * 100) : '35');
+      setInterestPercent(String(parseFloat(val!) * 100));
       const msg = await getSetting('sms_message');
       if (msg) setSmsMessage(msg);
     })();
