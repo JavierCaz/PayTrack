@@ -14,11 +14,17 @@ export default function SettingsScreen() {
   const { colors, isDark, setDarkMode } = useTheme();
   const [importing, setImporting] = useState(false);
   const [interestPercent, setInterestPercent] = useState('');
+  const [smsMessage, setSmsMessage] = useState('');
+  const [defaultsModalVisible, setDefaultsModalVisible] = useState(false);
+  const [modalInterest, setModalInterest] = useState('');
+  const [modalSms, setModalSms] = useState('');
 
   useEffect(() => {
     (async () => {
       const val = await getSetting('interest_percentage');
       setInterestPercent(val ? String(parseFloat(val) * 100) : '35');
+      const msg = await getSetting('sms_message');
+      if (msg) setSmsMessage(msg);
     })();
   }, []);
 
@@ -80,45 +86,21 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.interest')}</Text>
-        <View style={styles.option}>
-          <View style={[styles.iconBox, { backgroundColor: colors.infoBg }]}>
-            <Ionicons name="percent-outline" size={24} color={colors.primary} />
+        <Text style={styles.sectionTitle}>{t('settings.defaultsTitle')}</Text>
+        <TouchableOpacity style={styles.option} onPress={() => {
+          setModalInterest(interestPercent);
+          setModalSms(smsMessage);
+          setDefaultsModalVisible(true);
+        }}>
+          <View style={[styles.iconBox, { backgroundColor: colors.warningBg }]}>
+            <Ionicons name="options-outline" size={24} color={colors.warning} />
           </View>
           <View style={styles.optionInfo}>
-            <Text style={styles.optionTitle}>{t('settings.interestLabel')}</Text>
-            <Text style={styles.optionDesc}>{t('settings.interestDesc')}</Text>
+            <Text style={styles.optionTitle}>{t('settings.modifyDefaults')}</Text>
+            <Text style={styles.optionDesc}>{t('settings.modifyDefaultsDesc')}</Text>
           </View>
-          <TextInput
-            style={{
-              backgroundColor: colors.chipBg,
-              color: colors.text,
-              fontSize: 16,
-              fontWeight: '700',
-              borderRadius: 8,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              width: 72,
-              textAlign: 'center',
-            }}
-            value={interestPercent}
-            onChangeText={(val) => {
-              const cleaned = val.replace(/[^0-9.]/g, '');
-              setInterestPercent(cleaned);
-            }}
-            onEndEditing={async () => {
-              const num = parseFloat(interestPercent);
-              if (!isNaN(num) && num >= 0) {
-                const decimal = (num / 100).toFixed(4);
-                await setSetting('interest_percentage', decimal);
-              }
-            }}
-            keyboardType="numeric"
-            placeholder="35"
-            placeholderTextColor={colors.textTertiary}
-          />
-          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textSecondary }}>%</Text>
-        </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
@@ -182,6 +164,84 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
+      <Modal visible={defaultsModalVisible} transparent animationType="fade" onRequestClose={() => setDefaultsModalVisible(false)}>
+        <View style={styles.overlay}>
+          <View style={{ backgroundColor: colors.card, borderRadius: 16, padding: 24, marginHorizontal: 24, width: '85%', maxWidth: 400 }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 20 }}>{t('settings.modifyDefaults')}</Text>
+
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 4 }}>{t('settings.interestLabel')}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <TextInput
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.chipBg,
+                  color: colors.text,
+                  fontSize: 16,
+                  fontWeight: '700',
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  textAlign: 'center',
+                }}
+                value={modalInterest}
+                onChangeText={(val) => setModalInterest(val.replace(/[^0-9.]/g, ''))}
+                keyboardType="numeric"
+                placeholder="35"
+                placeholderTextColor={colors.textTertiary}
+              />
+              <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textSecondary }}>%</Text>
+            </View>
+
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 4 }}>{t('settings.smsMessage')}</Text>
+            <TextInput
+              style={{
+                backgroundColor: colors.chipBg,
+                color: colors.text,
+                fontSize: 15,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderWidth: 1,
+                borderColor: colors.border,
+                minHeight: 80,
+                textAlignVertical: 'top',
+                marginBottom: 20,
+              }}
+              value={modalSms}
+              onChangeText={setModalSms}
+              multiline
+              placeholder={t('clients.smsMessage')}
+              placeholderTextColor={colors.textTertiary}
+            />
+
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: colors.chipBg, alignItems: 'center' }}
+                onPress={() => setDefaultsModalVisible(false)}
+              >
+                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: colors.primary, alignItems: 'center' }}
+                onPress={async () => {
+                  const num = parseFloat(modalInterest);
+                  if (!isNaN(num) && num >= 0) {
+                    const decimal = (num / 100).toFixed(4);
+                    await setSetting('interest_percentage', decimal);
+                    setInterestPercent(modalInterest);
+                  }
+                  await setSetting('sms_message', modalSms.trim());
+                  setSmsMessage(modalSms.trim());
+                  setDefaultsModalVisible(false);
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>{t('common.save')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={importing} transparent animationType="fade">
         <View style={styles.overlay}>
           <View style={styles.overlayBox}>
