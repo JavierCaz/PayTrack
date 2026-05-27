@@ -90,7 +90,9 @@ export async function getDashboardStats(): Promise<{
   totalClients: number; totalCollections: number; totalPayments: number;
   totalPaymentsSum: number; totalPaidOut: number; totalRemainder: number;
   activeCollections: number; completedCollections: number; overdueCollections: number;
-  totalOutstanding: number; monthlyIncome: number; todayIncome: number; weekIncome: number; yearIncome: number;
+  totalOutstanding: number;
+  monthlyIncome: number; todayIncome: number; weekIncome: number; yearIncome: number;
+  monthlyEarnings: number; todayEarnings: number; weekEarnings: number; yearEarnings: number;
   activeClients: number; blacklistedClients: number;
   realEarnings: number; totalInvestment: number; interestPercentage: number;
 }> {
@@ -112,7 +114,6 @@ export async function getDashboardStats(): Promise<{
     const totalCollections = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections");
     const totalPayments = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM payments");
     const paymentsSum = await db.getFirstAsync<any>("SELECT COALESCE(SUM(p.amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id");
-    const paidOut = await db.getFirstAsync<any>("SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id");
     const activeColl = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections WHERE status = 'active'");
     const completedColl = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections WHERE status = 'completed'");
     const overdueColl = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM collections WHERE status = 'overdue'");
@@ -121,6 +122,10 @@ export async function getDashboardStats(): Promise<{
     const todayIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date = ?`, [todayStr]);
     const weekIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date >= ? AND p.paid_date <= ?`, [weekStartStr, weekEndStr]);
     const yearIncome = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date >= ? AND p.paid_date <= ?`, [yearStartStr, yearEndStr]);
+    const monthlyEarnings = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount * COALESCE(c.conversion_rate, 1.0) * COALESCE(c.interest_rate, ?)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date >= ? AND p.paid_date <= ?`, [interestPercentage, monthStartStr, monthEndStr]);
+    const todayEarnings = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount * COALESCE(c.conversion_rate, 1.0) * COALESCE(c.interest_rate, ?)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date = ?`, [interestPercentage, todayStr]);
+    const weekEarnings = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount * COALESCE(c.conversion_rate, 1.0) * COALESCE(c.interest_rate, ?)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date >= ? AND p.paid_date <= ?`, [interestPercentage, weekStartStr, weekEndStr]);
+    const yearEarnings = await db.getFirstAsync<any>(`SELECT COALESCE(SUM(p.paid_amount * COALESCE(c.conversion_rate, 1.0) * COALESCE(c.interest_rate, ?)), 0) as total FROM payments p JOIN collections c ON c.id = p.collection_id WHERE p.paid_date >= ? AND p.paid_date <= ?`, [interestPercentage, yearStartStr, yearEndStr]);
     const globalRemainder = await db.getFirstAsync<any>(`SELECT COALESCE(SUM((c.total_price - COALESCE(paid.paid, 0))  * COALESCE(c.conversion_rate, 1.0)), 0) as total FROM collections c LEFT JOIN (SELECT collection_id, SUM(paid_amount) as paid FROM payments GROUP BY collection_id) paid ON paid.collection_id = c.id`);
     const activeClients = await db.getFirstAsync<any>(
       `SELECT COUNT(*) as count FROM (
@@ -141,9 +146,20 @@ export async function getDashboardStats(): Promise<{
     );
     const blacklistedClients = await db.getFirstAsync<any>("SELECT COUNT(*) as count FROM clients WHERE blacklisted = 1");
 
-    const totalPaidOutValue = paidOut?.total || 0;
-    const totalInvestment = interestPercentage > 0 ? totalPaidOutValue / (1 + interestPercentage) : totalPaidOutValue;
-    const realEarnings = totalPaidOutValue - totalInvestment;
+    const collectionPaidRows = await db.getAllAsync<any>(
+      `SELECT c.interest_rate, COALESCE(SUM(p.paid_amount * COALESCE(c.conversion_rate, 1.0)), 0) as collection_paid
+       FROM collections c LEFT JOIN payments p ON p.collection_id = c.id AND p.status = 'paid'
+       GROUP BY c.id`
+    );
+    let totalPaidOutValue = 0;
+    let realEarnings = 0;
+    for (const row of collectionPaidRows) {
+      const paid = row.collection_paid;
+      const rate = row.interest_rate ?? interestPercentage;
+      totalPaidOutValue += paid;
+      realEarnings += paid * rate;
+    }
+    const totalInvestment = totalPaidOutValue - realEarnings;
 
     return {
       totalClients: totalClients?.count || 0, totalCollections: totalCollections?.count || 0,
@@ -153,22 +169,27 @@ export async function getDashboardStats(): Promise<{
       overdueCollections: overdueColl?.count || 0, totalOutstanding: outstanding?.total || 0,
       monthlyIncome: monthlyIncome?.total || 0, todayIncome: todayIncome?.total || 0,
       weekIncome: weekIncome?.total || 0, yearIncome: yearIncome?.total || 0,
+      monthlyEarnings: monthlyEarnings?.total || 0, todayEarnings: todayEarnings?.total || 0,
+      weekEarnings: weekEarnings?.total || 0, yearEarnings: yearEarnings?.total || 0,
       activeClients: activeClients?.count || 0, blacklistedClients: blacklistedClients?.count || 0,
       realEarnings, totalInvestment, interestPercentage,
     };
   });
 }
 
+function computeEarnings(rows: { paid_amount: number; conversion_rate: number; interest_rate: number | null }[], globalRate: number): number {
+  let earnings = 0;
+  for (const row of rows) {
+    const rate = row.interest_rate ?? globalRate;
+    const contributed = row.paid_amount * row.conversion_rate;
+    earnings += contributed * rate;
+  }
+  return earnings;
+}
+
 export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'year'): Promise<IncomeDataPoint[]> {
   const interestStr = await getSetting('interest_percentage');
-  const interestPct = parseFloat(interestStr || '0.35');
-
-  function withEarnings(data: { label: string; amount: number }[]): IncomeDataPoint[] {
-    return data.map(d => ({
-      ...d,
-      earnings: interestPct > 0 ? d.amount * (interestPct / (1 + interestPct)) : d.amount,
-    }));
-  }
+  const globalRate = parseFloat(interestStr || '0.35');
 
   return dbQuery(async (db) => {
     const now = dayjs();
@@ -177,67 +198,114 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
       const weekStart = now.subtract((now.day() + 6) % 7, 'day');
       const weekEnd = weekStart.add(6, 'day');
       const rows = await db.getAllAsync<any>(
-        `SELECT p.paid_date, COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as amount
+        `SELECT p.paid_date, p.paid_amount, c.conversion_rate, c.interest_rate
          FROM payments p JOIN collections c ON c.id = p.collection_id
          WHERE p.paid_date >= ? AND p.paid_date <= ?
-         GROUP BY p.paid_date ORDER BY p.paid_date`,
+         ORDER BY p.paid_date`,
         [weekStart.format('YYYY-MM-DD'), weekEnd.format('YYYY-MM-DD')]
       );
-      const map = new Map(rows.map(r => [r.paid_date, r.amount]));
+      const dayBuckets = new Map<string, { amount: number; detailRows: any[] }>();
+      for (const row of rows) {
+        const date = row.paid_date;
+        if (!dayBuckets.has(date)) dayBuckets.set(date, { amount: 0, detailRows: [] });
+        const bucket = dayBuckets.get(date)!;
+        const contributed = row.paid_amount * (row.conversion_rate || 1);
+        bucket.amount += contributed;
+        bucket.detailRows.push(row);
+      }
       const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      return withEarnings(labels.map((label, i) => ({
-        label,
-        amount: map.get(weekStart.add(i, 'day').format('YYYY-MM-DD')) || 0,
-      })));
+      return labels.map((label, i) => {
+        const date = weekStart.add(i, 'day').format('YYYY-MM-DD');
+        const bucket = dayBuckets.get(date);
+        return {
+          label,
+          amount: bucket?.amount || 0,
+          earnings: bucket ? computeEarnings(bucket.detailRows, globalRate) : 0,
+        };
+      });
     }
 
     if (period === 'week') {
       const monthStart = now.startOf('month');
       const monthEnd = now.endOf('month');
       const rows = await db.getAllAsync<any>(
-        `SELECT p.paid_date, COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as amount
+        `SELECT p.paid_date, p.paid_amount, c.conversion_rate, c.interest_rate
          FROM payments p JOIN collections c ON c.id = p.collection_id
          WHERE p.paid_date >= ? AND p.paid_date <= ?
-         GROUP BY p.paid_date ORDER BY p.paid_date`,
+         ORDER BY p.paid_date`,
         [monthStart.format('YYYY-MM-DD'), monthEnd.format('YYYY-MM-DD')]
       );
-      const weekMap = new Map<number, number>();
+      const weekBuckets = new Map<number, { amount: number; detailRows: any[] }>();
       for (const row of rows) {
         const dayOfMonth = dayjs(row.paid_date).date();
         const weekIndex = Math.floor((dayOfMonth - 1) / 7);
-        weekMap.set(weekIndex, (weekMap.get(weekIndex) || 0) + row.amount);
+        if (!weekBuckets.has(weekIndex)) weekBuckets.set(weekIndex, { amount: 0, detailRows: [] });
+        const bucket = weekBuckets.get(weekIndex)!;
+        const contributed = row.paid_amount * (row.conversion_rate || 1);
+        bucket.amount += contributed;
+        bucket.detailRows.push(row);
       }
       const numWeeks = Math.ceil(monthEnd.date() / 7);
-      return withEarnings(Array.from({ length: numWeeks }, (_, i) => ({
-        label: `W${i + 1}`,
-        amount: weekMap.get(i) || 0,
-      })));
+      return Array.from({ length: numWeeks }, (_, i) => {
+        const bucket = weekBuckets.get(i);
+        return {
+          label: `W${i + 1}`,
+          amount: bucket?.amount || 0,
+          earnings: bucket ? computeEarnings(bucket.detailRows, globalRate) : 0,
+        };
+      });
     }
 
     if (period === 'month') {
       const yearStart = now.startOf('year');
       const yearEnd = now.endOf('year');
       const rows = await db.getAllAsync<any>(
-        `SELECT strftime('%m', p.paid_date) as month_num, COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as amount
+        `SELECT strftime('%m', p.paid_date) as month_num, p.paid_amount, c.conversion_rate, c.interest_rate
          FROM payments p JOIN collections c ON c.id = p.collection_id
          WHERE p.paid_date >= ? AND p.paid_date <= ?
-         GROUP BY month_num ORDER BY month_num`,
+         ORDER BY month_num`,
         [yearStart.format('YYYY-MM-DD'), yearEnd.format('YYYY-MM-DD')]
       );
-      const map = new Map(rows.map(r => [r.month_num, r.amount]));
+      const monthBuckets = new Map<string, { amount: number; detailRows: any[] }>();
+      for (const row of rows) {
+        const month = row.month_num;
+        if (!monthBuckets.has(month)) monthBuckets.set(month, { amount: 0, detailRows: [] });
+        const bucket = monthBuckets.get(month)!;
+        const contributed = row.paid_amount * (row.conversion_rate || 1);
+        bucket.amount += contributed;
+        bucket.detailRows.push(row);
+      }
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return withEarnings(monthNames.map((name, i) => ({
-        label: name,
-        amount: map.get(String(i + 1).padStart(2, '0')) || 0,
-      })));
+      return monthNames.map((name, i) => {
+        const month = String(i + 1).padStart(2, '0');
+        const bucket = monthBuckets.get(month);
+        return {
+          label: name,
+          amount: bucket?.amount || 0,
+          earnings: bucket ? computeEarnings(bucket.detailRows, globalRate) : 0,
+        };
+      });
     }
 
     // year
     const rows = await db.getAllAsync<any>(
-      `SELECT strftime('%Y', p.paid_date) as year, COALESCE(SUM(p.paid_amount  * COALESCE(c.conversion_rate, 1.0)), 0) as amount
+      `SELECT strftime('%Y', p.paid_date) as year, p.paid_amount, c.conversion_rate, c.interest_rate
        FROM payments p JOIN collections c ON c.id = p.collection_id
-       GROUP BY year ORDER BY year`
+       ORDER BY p.paid_date`
     );
-    return withEarnings(rows.map(r => ({ label: r.year, amount: r.amount })));
+    const yearBuckets = new Map<string, { amount: number; detailRows: any[] }>();
+    for (const row of rows) {
+      const year = row.year;
+      if (!yearBuckets.has(year)) yearBuckets.set(year, { amount: 0, detailRows: [] });
+      const bucket = yearBuckets.get(year)!;
+      const contributed = row.paid_amount * (row.conversion_rate || 1);
+      bucket.amount += contributed;
+      bucket.detailRows.push(row);
+    }
+    return Array.from(yearBuckets.entries()).map(([year, bucket]) => ({
+      label: year,
+      amount: bucket.amount,
+      earnings: computeEarnings(bucket.detailRows, globalRate),
+    }));
   });
 }

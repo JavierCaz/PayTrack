@@ -22,6 +22,10 @@ interface PaymentState {
     todayIncome: number;
     weekIncome: number;
     yearIncome: number;
+    monthlyEarnings: number;
+    todayEarnings: number;
+    weekEarnings: number;
+    yearEarnings: number;
     activeClients: number;
     blacklistedClients: number;
     interestPercentage: number;
