@@ -36,9 +36,13 @@ export default function Dashboard() {
 
   const periodEarnings = useMemo(() => {
     if (!stats) return 0;
-    const pct = stats.interestPercentage;
-    return pct > 0 ? periodIncome * (pct / (1 + pct)) : periodIncome;
-  }, [periodIncome, stats]);
+    switch (period) {
+      case 'today': return stats.todayEarnings;
+      case 'week': return stats.weekEarnings;
+      case 'month': return stats.monthlyEarnings;
+      case 'year': return stats.yearEarnings;
+    }
+  }, [period, stats]);
 
   const periods: Period[] = ['today', 'week', 'month', 'year'];
 
