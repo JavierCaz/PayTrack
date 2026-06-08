@@ -16,7 +16,7 @@ import { useTheme } from '../../src/theme';
 export default function ClientsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { clients, loading, searchQuery, setSearchQuery, filterStatus, setFilterStatus, loadClients } = useClientStore();
+  const { clients, loading, searchQuery, setSearchQuery, filterStatus, setFilterStatus, loadClients, resetSearchFilter } = useClientStore();
 
   const insets = useSafeAreaInsets();
   const filterOptions = useMemo(() => [
@@ -32,7 +32,8 @@ export default function ClientsScreen() {
   useFocusEffect(useCallback(() => {
     loadClients();
     getSetting('sms_message').then(msg => { if (msg) setSmsMessage(msg); else setSmsMessage(''); });
-  }, [loadClients]));
+    return () => { resetSearchFilter(); };
+  }, [loadClients, resetSearchFilter]));
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },

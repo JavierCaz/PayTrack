@@ -10,6 +10,7 @@ interface ClientState {
   filterStatus: string;
   setSearchQuery: (query: string) => void;
   setFilterStatus: (status: string) => void;
+  resetSearchFilter: () => void;
   loadClients: () => Promise<void>;
   addClient: (data: { name: string; phone?: string; email?: string; notes?: string; defaultRecurrence?: import('../types').RecurrenceConfig | null }) => Promise<string>;
   updateClient: (id: string, data: Partial<Client>) => Promise<void>;
@@ -55,6 +56,11 @@ export const useClientStore = create<ClientState>((set, get) => {
     set({ filterStatus: status });
     const { allClients } = get();
     set({ clients: applyFilter(allClients, status) });
+  },
+
+  resetSearchFilter: () => {
+    set({ searchQuery: '' });
+    get().loadClients();
   },
 
   loadClients: async () => {

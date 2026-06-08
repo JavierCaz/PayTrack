@@ -32,7 +32,13 @@ export function isClientPending(
   if (dayjs(periods[currentIdx].occurrence).isBefore(start, 'day')) return false;
 
   const cp = periods[currentIdx];
-  if (paidDates.filter(d => d >= cp.start && d <= cp.end).length >= 1) return false;
+
+  let currentPaidCount = paidDates.filter(d => d >= cp.start && d <= cp.end).length;
+  if (currentIdx > 0) {
+    const pp = periods[currentIdx - 1];
+    currentPaidCount += paidDates.filter(d => d > pp.occurrence && d <= pp.end).length;
+  }
+  if (currentPaidCount >= 1) return false;
 
   if (currentIdx === 0) return true;
 
