@@ -7,6 +7,7 @@ import { useTranslation } from '../../../src/i18n';
 import { useTheme } from '../../../src/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dayjs from 'dayjs';
+import DatePickerField from '../../../components/DatePickerField';
 import type { RecurrenceType, RecurrenceConfig } from '../../../src/types';
 import * as clientService from '../../../src/services/clientService';
 import { getSetting } from '../../../src/services/settingsService';
@@ -199,7 +200,7 @@ export default function NewCollectionScreen() {
         <View style={styles.field}><Text style={styles.label}>{t('collection.installmentAmount')}</Text><TextInput style={styles.input} value={installmentAmount} onChangeText={setInstallmentAmount} placeholder="" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.installmentAmountHint')}</Text></View>
         <View style={styles.field}><Text style={styles.label}>{t('collection.conversionRate')} *</Text><TextInput style={styles.input} value={conversionRate} onChangeText={setConversionRate} placeholder="1" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={styles.hint}>{t('collection.conversionRateHint')}</Text></View>
         <View style={styles.field}><Text style={styles.label}>{t('collection.interestRate')} *</Text><View style={styles.row}><TextInput style={[styles.input, { flex: 1 }]} value={interestRate} onChangeText={(val) => setInterestRate(val.replace(/[^0-9.]/g, ''))} placeholder="" placeholderTextColor={colors.textTertiary} keyboardType="decimal-pad" /><Text style={{ fontSize: 16, fontWeight: '600', color: colors.textSecondary, alignSelf: 'center' }}>%</Text></View><Text style={styles.hint}>{t('collection.interestRateHint')}</Text></View>
-        <View style={styles.field}><Text style={styles.label}>{t('collection.startDate')} *</Text><TextInput style={styles.input} value={startDate} onChangeText={setStartDate} placeholder={t('collection.startDatePlaceholder')} placeholderTextColor={colors.textTertiary} /><Text style={styles.hint}>{t('collection.startDateHint')}</Text></View>
+        <DatePickerField label={`${t('collection.startDate')} *`} value={startDate} onChange={setStartDate} />
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
