@@ -6,6 +6,7 @@ export interface Client {
   notes: string;
   blacklisted: boolean;
   blacklistNote: string;
+  placeholderName: string;
   defaultRecurrence: RecurrenceConfig | null;
   createdAt: string;
   updatedAt: string;

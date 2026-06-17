@@ -43,6 +43,7 @@ export default function EditClientScreen() {
   }), [colors]);
 
   const [name, setName] = useState('');
+  const [placeholderName, setPlaceholderName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [notes, setNotes] = useState('');
@@ -56,6 +57,7 @@ export default function EditClientScreen() {
   useEffect(() => {
     if (client) {
       setName(client.name);
+      setPlaceholderName(client.placeholderName || client.name.split(' ')[0]);
       setPhone(client.phone);
       setEmail(client.email);
       setNotes(client.notes);
@@ -85,7 +87,7 @@ export default function EditClientScreen() {
     if (!name.trim()) { Alert.alert(t('common.required'), t('clients.nameRequired')); return; }
     if (!id) return;
     setSaving(true);
-    try { await updateClient(id, { name: name.trim(), phone: phone.trim(), email: email.trim(), notes: notes.trim(), defaultRecurrence: buildDefaultRecurrence() }); router.back(); }
+    try { await updateClient(id, { name: name.trim(), placeholderName: placeholderName.trim() || name.trim().split(' ')[0], phone: phone.trim(), email: email.trim(), notes: notes.trim(), defaultRecurrence: buildDefaultRecurrence() }); router.back(); }
     catch { Alert.alert(t('common.error'), t('clients.updateFailed')); }
     finally { setSaving(false); }
   };
@@ -99,6 +101,7 @@ export default function EditClientScreen() {
     <KeyboardAvoidingView style={{flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.field}><Text style={styles.label}>{t('common.name')} *</Text><TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Client name" placeholderTextColor={colors.textTertiary} /></View>
+        <View style={styles.field}><Text style={styles.label}>{t('clients.placeholderName')}</Text><Text style={styles.hint}>{t('clients.placeholderNameHint')}</Text><TextInput style={styles.input} value={placeholderName} onChangeText={setPlaceholderName} placeholder={name.split(' ')[0]} placeholderTextColor={colors.textTertiary} /></View>
         <View style={styles.field}><Text style={styles.label}>{t('common.phone')}</Text><TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+1 (555) 000-0000" placeholderTextColor={colors.textTertiary} keyboardType="phone-pad" /></View>
         <View style={styles.field}><Text style={styles.label}>{t('common.email')}</Text><TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="client@example.com" placeholderTextColor={colors.textTertiary} keyboardType="email-address" autoCapitalize="none" /></View>
         <View style={styles.field}><Text style={styles.label}>{t('common.notes')}</Text><TextInput style={[styles.input, styles.textArea]} value={notes} onChangeText={setNotes} placeholder="Additional notes..." placeholderTextColor={colors.textTertiary} multiline numberOfLines={3} /></View>

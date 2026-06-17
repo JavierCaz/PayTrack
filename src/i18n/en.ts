@@ -106,6 +106,8 @@ const en = {
   'clients.blacklistedWarning': 'BLACKLISTED: {note}',
   'clients.phonePlaceholder': '+1 (555) 000-0000',
   'clients.emailPlaceholder': 'client@example.com',
+  'clients.placeholderName': 'Name placeholder',
+  'clients.placeholderNameHint': 'Custom name used for {name} in messages',
   'clients.defaultRecurrence': 'Default Collection Recurrence',
   'clients.defaultRecurrenceHint': 'Pre-filled when creating a new collection for this client',
 

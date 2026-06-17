@@ -108,6 +108,8 @@ const es: Translation = {
   'clients.blacklistedWarning': 'LISTA NEGRA: {note}',
   'clients.phonePlaceholder': '+1 (555) 000-0000',
   'clients.emailPlaceholder': 'cliente@ejemplo.com',
+  'clients.placeholderName': 'Nombre personalizado',
+  'clients.placeholderNameHint': 'Nombre usado para {name} en mensajes',
   'clients.defaultRecurrence': 'Repetición predeterminada',
   'clients.defaultRecurrenceHint': 'Se usará al crear un nuevo cobro para este cliente',
 

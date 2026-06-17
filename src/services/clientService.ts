@@ -8,6 +8,7 @@ interface ClientData {
   phone?: string;
   email?: string;
   notes?: string;
+  placeholderName?: string;
   defaultRecurrence?: RecurrenceConfig | null;
 }
 
@@ -25,6 +26,7 @@ function rowToClient(row: any): ClientRow {
     notes: row.notes || '',
     blacklisted: !!row.blacklisted,
     blacklistNote: row.blacklist_note || '',
+    placeholderName: row.placeholder_name || '',
     defaultRecurrence,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -123,9 +125,10 @@ export async function createClient(data: ClientData): Promise<string> {
   return dbQuery(async (db) => {
     const id = generateId();
     const now = nowISO();
+    const placeholderName = data.placeholderName ?? data.name.split(' ')[0];
     await db.runAsync(
-      'INSERT INTO clients (id, name, phone, email, notes, default_recurrence, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, data.name, data.phone || '', data.email || '', data.notes || '', data.defaultRecurrence ? serializeRecurrence(data.defaultRecurrence) : null, now, now]
+      'INSERT INTO clients (id, name, phone, email, notes, placeholder_name, default_recurrence, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, data.name, data.phone || '', data.email || '', data.notes || '', placeholderName, data.defaultRecurrence ? serializeRecurrence(data.defaultRecurrence) : null, now, now]
     );
     return id;
   });
@@ -140,6 +143,7 @@ export async function updateClient(id: string, data: Partial<ClientData>): Promi
     if (data.phone !== undefined) { fields.push('phone = ?'); values.push(data.phone); }
     if (data.email !== undefined) { fields.push('email = ?'); values.push(data.email); }
     if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
+    if (data.placeholderName !== undefined) { fields.push('placeholder_name = ?'); values.push(data.placeholderName); }
     if (data.defaultRecurrence !== undefined) { fields.push('default_recurrence = ?'); values.push(data.defaultRecurrence ? serializeRecurrence(data.defaultRecurrence) : null); }
     fields.push('updated_at = ?');
     values.push(now);

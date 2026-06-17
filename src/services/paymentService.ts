@@ -32,11 +32,11 @@ export async function getPayment(id: string): Promise<PaymentRow | null> {
 export async function getPaymentWithDetails(id: string): Promise<any | null> {
   return dbQuery(async (db) => {
     const row: any = await db.getFirstAsync(
-      `SELECT p.*, c.product_name, c.total_price, c.num_installments, cl.name as client_name, cl.phone as client_phone,
+      `SELECT p.*, c.product_name, c.total_price, c.num_installments, cl.name as client_name, cl.phone as client_phone, cl.placeholder_name as client_placeholder_name,
         (SELECT COALESCE(SUM(paid_amount), 0) FROM payments WHERE collection_id = p.collection_id AND installment_number <= p.installment_number) as total_paid_for_collection
        FROM payments p JOIN collections c ON c.id = p.collection_id JOIN clients cl ON cl.id = c.client_id WHERE p.id = ?`, [id]);
     if (!row) return null;
-    return { ...rowToPayment(row), productName: row.product_name, totalPrice: row.total_price, numInstallments: row.num_installments, clientName: row.client_name, clientPhone: row.client_phone, totalPaidForCollection: row.total_paid_for_collection };
+    return { ...rowToPayment(row), productName: row.product_name, totalPrice: row.total_price, numInstallments: row.num_installments, clientName: row.client_name, clientPhone: row.client_phone, clientPlaceholderName: row.client_placeholder_name || '', totalPaidForCollection: row.total_paid_for_collection };
   });
 }
 

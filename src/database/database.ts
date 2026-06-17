@@ -128,6 +128,7 @@ export async function initDatabase(): Promise<void> {
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN blacklisted INTEGER DEFAULT 0'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN blacklist_note TEXT DEFAULT \'\''); } catch (_) {}
     try { await database.runAsync('ALTER TABLE clients ADD COLUMN default_recurrence TEXT'); } catch (_) {}
+    try { await database.runAsync('ALTER TABLE clients ADD COLUMN placeholder_name TEXT DEFAULT \'\''); } catch (_) {}
     try { await database.runAsync('ALTER TABLE collections ADD COLUMN installment_amount REAL'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE collections DROP COLUMN payments_per_month'); } catch (_) {}
     try { await database.runAsync('ALTER TABLE collections ADD COLUMN conversion_rate REAL DEFAULT 1.0'); } catch (_) {}
