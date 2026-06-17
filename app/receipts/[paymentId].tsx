@@ -34,8 +34,8 @@ export default function ReceiptScreen() {
   const handleShare = async () => {
     if (!payment) return;
     setSharing(true);
-    const firstName = payment.clientName.split(' ')[0];
-    await Clipboard.setStringAsync(t('receipt.thankYouMessage', { name: firstName }));
+    const name = payment.clientPlaceholderName || payment.clientName.split(' ')[0];
+    await Clipboard.setStringAsync(t('receipt.thankYouMessage', { name }));
     await shareReceipt(receiptRef);
     setSharing(false);
   };

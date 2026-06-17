@@ -42,10 +42,10 @@ export default function ClientsScreen() {
 
   const onRefresh = async () => { setRefreshing(true); await loadClients(); setRefreshing(false); };
 
-  const handleSendSms = useCallback((name: string) => {
-    const firstName = name.split(' ')[0];
+  const handleSendSms = useCallback((clientName: string, placeholder?: string) => {
+    const name = placeholder || clientName.split(' ')[0];
     const message = smsMessage || t('clients.smsMessage');
-    Share.share({ message: message.replace(/\{name\}/g, firstName) });
+    Share.share({ message: message.replace(/\{name\}/g, name) });
   }, [t, smsMessage]);
 
   return (
@@ -56,7 +56,7 @@ export default function ClientsScreen() {
         <FlatList
           data={clients}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ClientCard client={item} totalCollections={item.totalCollections} collectionStatus={item.collectionStatus} onPress={() => router.push(`/clients/${item.id}`)} onSendSms={filterStatus === 'pending' ? () => handleSendSms(item.name) : undefined} />}
+          renderItem={({ item }) => <ClientCard client={item} totalCollections={item.totalCollections} collectionStatus={item.collectionStatus} onPress={() => router.push(`/clients/${item.id}`)} onSendSms={filterStatus === 'pending' ? () => handleSendSms(item.name, item.placeholderName) : undefined} />}
           ListEmptyComponent={<EmptyState icon="people-outline" title={t('clients.noClients')} subtitle={t('clients.noClientsDesc')} />}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={clients.length === 0 ? { flex: 1 } : { paddingVertical: 8, paddingBottom: insets.bottom + 80 }}
