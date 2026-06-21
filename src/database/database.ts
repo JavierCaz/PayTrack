@@ -109,7 +109,7 @@ export async function initDatabase(): Promise<void> {
     `CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY, collection_id TEXT NOT NULL,
       installment_number INTEGER NOT NULL, due_date TEXT NOT NULL,
-      amount REAL NOT NULL, status TEXT NOT NULL DEFAULT 'pending',
+      amount REAL NOT NULL,
       paid_date TEXT, paid_amount REAL, notes TEXT DEFAULT '',
       created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
       FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE
@@ -117,7 +117,6 @@ export async function initDatabase(): Promise<void> {
     'CREATE INDEX IF NOT EXISTS idx_collections_client_id ON collections(client_id)',
     'CREATE INDEX IF NOT EXISTS idx_payments_collection_id ON payments(collection_id)',
     'CREATE INDEX IF NOT EXISTS idx_payments_due_date ON payments(due_date)',
-    'CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status)',
   ];
   // Run schema setup inside dbQuery so any connection failure triggers auto-reopen
   await dbQuery(async (database) => {

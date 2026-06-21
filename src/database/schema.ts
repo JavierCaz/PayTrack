@@ -35,7 +35,6 @@ CREATE TABLE IF NOT EXISTS payments (
   installment_number INTEGER NOT NULL,
   due_date TEXT NOT NULL,
   amount REAL NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
   paid_date TEXT,
   paid_amount REAL,
   notes TEXT DEFAULT '',
@@ -47,5 +46,4 @@ CREATE TABLE IF NOT EXISTS payments (
 CREATE INDEX IF NOT EXISTS idx_collections_client_id ON collections(client_id);
 CREATE INDEX IF NOT EXISTS idx_payments_collection_id ON payments(collection_id);
 CREATE INDEX IF NOT EXISTS idx_payments_due_date ON payments(due_date);
-CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 `;

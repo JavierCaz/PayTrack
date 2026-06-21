@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS payments (
   installment_number INTEGER NOT NULL,
   due_date TEXT NOT NULL,
   amount REAL NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
   paid_date TEXT,
   paid_amount REAL,
   notes TEXT DEFAULT '',

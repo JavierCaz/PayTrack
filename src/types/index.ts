@@ -68,7 +68,6 @@ export interface Payment {
   installmentNumber: number;
   dueDate: string;
   amount: number;
-  status: 'paid';
   paidDate: string | null;
   paidAmount: number | null;
   notes: string;
@@ -86,7 +85,6 @@ export interface PaymentWithCollection extends Payment {
 }
 
 export type CollectionStatus = 'active' | 'completed' | 'overdue';
-export type PaymentStatus = 'paid';
 
 export interface DashboardStats {
   totalClients: number;

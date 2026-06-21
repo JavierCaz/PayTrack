@@ -86,8 +86,8 @@ async function importExternalFormat(data: any): Promise<void> {
           const paidDate = normalizeDate(cobro.fechaCobro) || now;
           const monto = safeNum(cobro.monto);
           await db.runAsync(
-            'INSERT INTO payments (id, collection_id, installment_number, due_date, amount, status, paid_date, paid_amount, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [generateId(), newCollId, i + 1, paidDate, monto, 'paid', paidDate, monto, safeStr(cobro.obs), now, now]
+            'INSERT INTO payments (id, collection_id, installment_number, due_date, amount, paid_date, paid_amount, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [generateId(), newCollId, i + 1, paidDate, monto, paidDate, monto, safeStr(cobro.obs), now, now]
           );
         }
       }
@@ -195,9 +195,9 @@ export async function importBackup(uri: string): Promise<void> {
 
       for (const payment of backup.payments) {
         await db.runAsync(
-          'INSERT INTO payments (id, collection_id, installment_number, due_date, amount, status, paid_date, paid_amount, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO payments (id, collection_id, installment_number, due_date, amount, paid_date, paid_amount, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [payment.id, payment.collection_id, payment.installment_number, payment.due_date,
-           payment.amount, payment.status, payment.paid_date, payment.paid_amount,
+           payment.amount, payment.paid_date, payment.paid_amount,
            payment.notes, payment.created_at, payment.updated_at]
         );
       }

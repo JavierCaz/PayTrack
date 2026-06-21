@@ -7,7 +7,7 @@ import { getSetting } from './settingsService';
 function rowToPayment(row: any): PaymentRow {
   return {
     id: row.id, collectionId: row.collection_id, installmentNumber: row.installment_number,
-    dueDate: row.due_date, amount: row.amount, status: row.status,
+    dueDate: row.due_date, amount: row.amount,
     paidDate: row.paid_date || null, paidAmount: row.paid_amount || null,
     notes: row.notes || '', createdAt: row.created_at, updatedAt: row.updated_at,
   };
@@ -48,8 +48,8 @@ export async function recordPayment(collectionId: string, paidAmount: number, pa
     const installmentNumber = (countResult?.count || 0) + 1;
     const date = paidDate || now.split('T')[0];
     await db.runAsync(
-      `INSERT INTO payments (id, collection_id, installment_number, due_date, amount, status, paid_date, paid_amount, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'paid', ?, ?, ?, ?, ?)`,
+      `INSERT INTO payments (id, collection_id, installment_number, due_date, amount, paid_date, paid_amount, notes, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, collectionId, installmentNumber, date, paidAmount, date, paidAmount, notes || '', now, now]
     );
     await _updateCollectionStatus(db, collectionId);
@@ -136,7 +136,7 @@ export async function getDashboardStats(): Promise<{
             (col.total_price  * COALESCE(col.conversion_rate, 1.0)) as total_price,
             COALESCE(SUM(p.paid_amount  * COALESCE(col.conversion_rate, 1.0)), 0) as total_paid
           FROM collections col
-          LEFT JOIN payments p ON p.collection_id = col.id AND p.status = 'paid'
+          LEFT JOIN payments p ON p.collection_id = col.id
           GROUP BY col.id
         ) col ON col.client_id = c.id
         WHERE c.blacklisted = 0
@@ -148,7 +148,7 @@ export async function getDashboardStats(): Promise<{
 
     const collectionPaidRows = await db.getAllAsync<any>(
       `SELECT c.interest_rate, COALESCE(SUM(p.paid_amount * COALESCE(c.conversion_rate, 1.0)), 0) as collection_paid
-       FROM collections c LEFT JOIN payments p ON p.collection_id = c.id AND p.status = 'paid'
+       FROM collections c LEFT JOIN payments p ON p.collection_id = c.id
        GROUP BY c.id`
     );
     let totalPaidOutValue = 0;
