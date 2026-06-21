@@ -36,7 +36,8 @@ export function isClientPending(
   let currentPaidCount = paidDates.filter(d => d >= cp.start && d <= cp.end).length;
   if (currentIdx > 0) {
     const pp = periods[currentIdx - 1];
-    currentPaidCount += paidDates.filter(d => d > pp.occurrence && d <= pp.end).length;
+    const ppPaymentsAfterOccurrence = paidDates.filter(d => d > pp.occurrence && d <= pp.end).length;
+    currentPaidCount += Math.max(0, ppPaymentsAfterOccurrence - 1);
   }
   if (currentPaidCount >= 1) return false;
 
