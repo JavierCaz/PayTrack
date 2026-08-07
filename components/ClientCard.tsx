@@ -30,7 +30,7 @@ export default function ClientCard({ client, onPress, totalCollections = 0, coll
     smsButton: { padding: 8, borderRadius: 10, backgroundColor: colors.warning + '15' },
   }), [colors]);
 
-  const statusColor = collectionStatus === 'settled' ? '#22C55E' : collectionStatus === 'active' ? '#ef9a44' : colors.textTertiary;
+  const statusColor = client.blacklisted ? '#8B0000' : collectionStatus === 'settled' ? '#22C55E' : collectionStatus === 'active' ? '#ef9a44' : colors.textTertiary;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>

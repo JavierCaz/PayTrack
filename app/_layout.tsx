@@ -104,6 +104,7 @@ function RootLayoutInner() {
         <Stack.Screen name="payments/new/[collectionId]" options={{ headerShown: true, headerTitle: t('payment.title'), headerTintColor: headerTint, headerStyle: { backgroundColor: colors.headerBg } }} />
         <Stack.Screen name="payments/edit/[paymentId]" options={{ headerShown: true, headerTitle: t('payment.editTitle'), headerTintColor: headerTint, headerStyle: { backgroundColor: colors.headerBg } }} />
         <Stack.Screen name="receipts/[paymentId]" options={{ headerShown: true, headerTitle: t('receipt.title'), headerTintColor: headerTint, headerStyle: { backgroundColor: colors.headerBg } }} />
+        <Stack.Screen name="receipts/collection/[collectionId]" options={{ headerShown: true, headerTitle: t('receipt.collectionReceiptTitle'), headerTintColor: headerTint, headerStyle: { backgroundColor: colors.headerBg } }} />
         <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: t('settings.title'), headerTintColor: headerTint, headerStyle: { backgroundColor: colors.headerBg } }} />
       </Stack>
     </>

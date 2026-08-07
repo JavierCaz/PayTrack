@@ -99,6 +99,10 @@ export default function CollectionDetailScreen() {
             <TouchableOpacity style={styles.headerAction} onPress={handleDelete}>
               <Ionicons name="trash-outline" size={18} color={colors.danger} /><Text style={[styles.headerActionText, { color: colors.danger }]}>{t('common.delete')}</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.headerAction} onPress={() => router.push(`/receipts/collection/${id}`)}>
+              <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+              <Text style={[styles.headerActionText, { color: colors.primary }]}>{t('receipt.collectionReceiptTitle')}</Text>
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.statsRow}>
