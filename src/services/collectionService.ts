@@ -26,6 +26,11 @@ export interface CollectionWithMeta extends CollectionRow {
   paymentCount: number;
 }
 
+export interface CollectionReceiptData extends CollectionWithMeta {
+  clientPhone: string;
+  clientPlaceholderName: string;
+}
+
 function rowToCollection(row: any): CollectionRow {
   const recurrence = parseRecurrence(row.payment_days || '1,15');
   return {
@@ -75,6 +80,19 @@ export async function getCollectionWithMeta(id: string): Promise<CollectionWithM
     if (!row) return null;
     const collection = rowToCollection(row);
     return { ...collection, clientName: row.client_name, paidAmount: row.paid_amount, remainingBalance: collection.totalPrice - row.paid_amount, paymentCount: row.payment_count };
+  });
+}
+
+export async function getCollectionReceiptData(id: string): Promise<CollectionReceiptData | null> {
+  return dbQuery(async (db) => {
+    const row: any = await db.getFirstAsync(
+      `SELECT c.*, cl.name as client_name, cl.phone as client_phone, cl.placeholder_name as client_placeholder_name,
+        COALESCE((SELECT SUM(paid_amount) FROM payments WHERE collection_id = c.id), 0) as paid_amount,
+        COALESCE((SELECT COUNT(*) FROM payments WHERE collection_id = c.id), 0) as payment_count
+      FROM collections c JOIN clients cl ON cl.id = c.client_id WHERE c.id = ?`, [id]);
+    if (!row) return null;
+    const collection = rowToCollection(row);
+    return { ...collection, clientName: row.client_name, clientPhone: row.client_phone || '', clientPlaceholderName: row.client_placeholder_name || '', paidAmount: row.paid_amount, remainingBalance: collection.totalPrice - row.paid_amount, paymentCount: row.payment_count };
   });
 }
 

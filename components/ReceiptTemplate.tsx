@@ -14,6 +14,8 @@ interface ReceiptTemplateProps {
   totalCollectionAmount: number;
   pendingAmount: number;
   notes?: string;
+  mode?: 'payment' | 'collection';
+  payments?: { installmentNumber: number; amount: number; paidDate: string }[];
 }
 
 export default function ReceiptTemplate({
@@ -27,13 +29,15 @@ export default function ReceiptTemplate({
   totalCollectionAmount,
   pendingAmount,
   notes,
+  mode = 'payment',
+  payments,
 }: ReceiptTemplateProps) {
   const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('receipt.paymentReceipt')}</Text>
+        <Text style={styles.title}>{mode === 'collection' ? t('receipt.collectionReceipt') : t('receipt.paymentReceipt')}</Text>
         <Text style={styles.receiptNo}>{t('receipt.receiptNo', { number: receiptNumber || `${Date.now()}` })}</Text>
       </View>
 
@@ -44,10 +48,18 @@ export default function ReceiptTemplate({
           <Text style={styles.sectionTitle}>{t('receipt.client')}</Text>
           <Text style={styles.value}>{clientName}</Text>
         </View>
-        <View style={styles.dataColumn}>
-          <Text style={styles.sectionTitle}>{t('receipt.paidDate')}</Text>
-          <Text style={styles.value}>{formatDate(paidDate)}</Text>
-        </View>
+        {mode === 'payment' && (
+          <View style={styles.dataColumn}>
+            <Text style={styles.sectionTitle}>{t('receipt.paidDate')}</Text>
+            <Text style={styles.value}>{formatDate(paidDate)}</Text>
+          </View>
+        )}
+        {mode === 'collection' && (
+          <View style={styles.dataColumn}>
+            <Text style={styles.sectionTitle}>{t('receipt.totalPayments')}</Text>
+            <Text style={styles.value}>{installmentNumber} / {totalInstallments}</Text>
+          </View>
+        )}
       </View>
       <View style={styles.dataRow}>
         <View style={styles.dataColumn}>
@@ -55,9 +67,13 @@ export default function ReceiptTemplate({
           <Text style={styles.value}>{collectionName}</Text>
         </View>
         <View style={styles.dataColumn}>
-          <Text style={styles.sectionTitle}>{t('receipt.installment')}</Text>
-          <Text style={styles.value}>{installmentNumber} / {totalInstallments}</Text>
-        </View>
+          {mode === 'payment' && (
+            <>
+              <Text style={styles.sectionTitle}>{t('receipt.installment')}</Text>
+              <Text style={styles.value}>{installmentNumber} / {totalInstallments}</Text>
+            </>
+          )}
+      </View>
       </View>
 
       {!!notes && (
@@ -75,14 +91,30 @@ export default function ReceiptTemplate({
           <Text style={styles.totalValue}>{formatCurrency(totalCollectionAmount)}</Text>
         </View>
         <View style={styles.paymentMadeRow}>
-          <Text style={styles.paymentMadeLabel}>{t('receipt.paymentMade')}</Text>
+          <Text style={styles.paymentMadeLabel}>{mode === 'collection' ? t('receipt.totalPaid') : t('receipt.paymentMade')}</Text>
           <Text style={styles.paymentMadeValue}>{formatCurrency(paidAmount)}</Text>
         </View>
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>{t('receipt.pendingAfter')}</Text>
+          <Text style={styles.totalLabel}>{mode === 'collection' ? t('receipt.remainingBalance') : t('receipt.pendingAfter')}</Text>
           <Text style={styles.pendingValue}>{formatCurrency(pendingAmount)}</Text>
         </View>
       </View>
+
+      {mode === 'collection' && payments && payments.length > 0 && (
+        <>
+          <View style={styles.divider} />
+          <View style={styles.paymentsSection}>
+            <Text style={styles.paymentsTitle}>{t('receipt.payments')}</Text>
+            {payments.map((p) => (
+              <View key={p.installmentNumber} style={styles.paymentRow}>
+                <Text style={styles.paymentNumber}>#{p.installmentNumber}</Text>
+                <Text style={styles.paymentAmount}>{formatCurrency(p.amount)}</Text>
+                <Text style={styles.paymentDate}>{formatDate(p.paidDate)}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>{t('receipt.thankYou')}</Text>
@@ -200,5 +232,44 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
     fontStyle: 'italic',
+  },
+  paymentsSection: {
+    gap: 8,
+  },
+  paymentsTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#111827',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  paymentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  paymentNumber: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    width: 40,
+  },
+  paymentAmount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#10B981',
+    flex: 1,
+    textAlign: 'right',
+    paddingRight: 24,
+  },
+  paymentDate: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    width: 95,
+    textAlign: 'right',
   },
 });

@@ -34,11 +34,10 @@ export default function PaymentItem({ installmentNumber, dueDate, amount, paidDa
       <Ionicons name="checkmark-circle" size={24} color={colors.success} />
       <View style={styles.info}>
         <Text style={styles.installment}>{t('payment.installment', { number: installmentNumber })}</Text>
-        <Text style={styles.date}>{formatDate(dueDate)}</Text>
+        <Text style={styles.date}>{formatDate(paidDate || dueDate)}</Text>
       </View>
       <View style={styles.amountSection}>
         <Text style={styles.amount}>{paidAmount != null ? formatCurrency(paidAmount) : formatCurrency(amount)}</Text>
-        {paidDate && <Text style={styles.paidDateStyle}>{formatDate(paidDate)}</Text>}
       </View>
     </TouchableOpacity>
   );
