@@ -26,7 +26,7 @@ export default function ClientDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('active');
   const [blacklistModalVisible, setBlacklistModalVisible] = useState(false);
   const [blacklistNote, setBlacklistNote] = useState('');
   const [interestPct, setInterestPct] = useState(0);
@@ -97,7 +97,9 @@ export default function ClientDetailScreen() {
   }, [collections, interestPct]);
   const loadData = useCallback(async () => {
     if (!id) return;
-    setCollections(await loadClientCollectionsWithMeta(id));
+    const cols = await loadClientCollectionsWithMeta(id);
+    setCollections(cols);
+    if (!cols.some(c => c.status === 'active')) setFilterStatus('all');
     setLoading(false);
   }, [id, loadClientCollectionsWithMeta]);
 
@@ -189,7 +191,7 @@ export default function ClientDetailScreen() {
           )}
         </View>
         <View style={styles.section}><Text style={styles.sectionTitle}>{t('clients.collections')} ({filteredCollections.length})</Text></View>
-        <FilterChips options={[{ label: t('status.all'), value: 'all' }, { label: t('status.active'), value: 'active' }, { label: t('status.completed'), value: 'completed' }]} selected={filterStatus} onSelect={setFilterStatus} />
+        <FilterChips options={[{ label: t('status.active'), value: 'active' }, { label: t('status.completed'), value: 'completed' }, { label: t('status.all'), value: 'all' }]} selected={filterStatus} onSelect={setFilterStatus} />
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder={t('clients.searchCollectionPlaceholder')} />
         {filteredCollections.length === 0
           ? <EmptyState icon="folder-open-outline" title={t('clients.noCollections')} subtitle={t('clients.noCollectionsDesc')} />
