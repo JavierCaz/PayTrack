@@ -8,6 +8,7 @@ import type { IncomeDataPoint } from '../src/types';
 
 interface IncomeChartProps {
   data: IncomeDataPoint[];
+  hidden?: boolean;
 }
 
 const H = 200;
@@ -16,7 +17,7 @@ const PR = 6;
 const PT = 16;
 const PB = 22;
 
-export default function IncomeChart({ data }: IncomeChartProps) {
+export default function IncomeChart({ data, hidden = false }: IncomeChartProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -87,7 +88,7 @@ export default function IncomeChart({ data }: IncomeChartProps) {
 
         </Defs>
 
-        {yLabels.map((yl, i) => (
+        {!hidden && yLabels.map((yl, i) => (
           <SvgText
             key={`y${i}`}
             x={PL - 6}
@@ -113,7 +114,7 @@ export default function IncomeChart({ data }: IncomeChartProps) {
           </SvgText>
         ))}
 
-        {points.map((p, i) => (
+        {!hidden && points.map((p, i) => (
           <SvgText
             key={`v${i}`}
             x={p.x}
@@ -127,7 +128,7 @@ export default function IncomeChart({ data }: IncomeChartProps) {
           </SvgText>
         ))}
 
-        {points.map((p, i) => (
+        {!hidden && points.map((p, i) => (
           <SvgText
             key={`ev${i}`}
             x={p.x}

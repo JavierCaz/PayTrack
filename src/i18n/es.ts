@@ -68,6 +68,8 @@ const es: Translation = {
   'dashboard.month': 'Mes',
   'dashboard.year': 'Año',
   'dashboard.paymentsOnDay': 'Pagos del {date}',
+  'dashboard.showValues': 'Mostrar valores',
+  'dashboard.hideValues': 'Ocultar valores',
 
   'clients.title': 'Clientes',
   'clients.searchPlaceholder': 'Buscar clientes...',

@@ -66,6 +66,8 @@ const en = {
   'dashboard.month': 'Month',
   'dashboard.year': 'Year',
   'dashboard.paymentsOnDay': 'Payments on {date}',
+  'dashboard.showValues': 'Show values',
+  'dashboard.hideValues': 'Hide values',
 
   'clients.title': 'Clients',
   'clients.searchPlaceholder': 'Search clients...',

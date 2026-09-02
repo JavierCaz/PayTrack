@@ -6,11 +6,13 @@ import StatCard from '../../components/StatCard';
 import LoadingScreen from '../../components/LoadingScreen';
 import IncomeChart from '../../components/IncomeChart';
 import { usePaymentStore } from '../../src/stores/paymentStore';
+import { useUIStore } from '../../src/stores/uiStore';
 import { useTranslation } from '../../src/i18n';
 import { useTheme } from '../../src/theme';
-import { formatCurrency } from '../../src/utils/formatters';
+import { formatCurrency, maskCurrency, maskNumber } from '../../src/utils/formatters';
 import { formatDate } from '../../src/utils/dateUtils';
 import dayjs from 'dayjs';
+import { Ionicons } from '@expo/vector-icons';
 
 type Period = 'today' | 'week' | 'month' | 'year';
 
@@ -19,13 +21,19 @@ export default function Dashboard() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { stats, chartData, dayPayments, loadDashboardStats, loadChartData, loadDayPayments } = usePaymentStore();
+  const { privacyMode, hydratePrivacyMode, togglePrivacyMode } = useUIStore();
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState<Period>('month');
+  const [privacyReady, setPrivacyReady] = useState(false);
 
   useEffect(() => {
     loadChartData(period);
     if (period === 'today') loadDayPayments(dayjs().format('YYYY-MM-DD'));
   }, [period, loadChartData, loadDayPayments]);
+
+  useEffect(() => {
+    hydratePrivacyMode().finally(() => setPrivacyReady(true));
+  }, [hydratePrivacyMode]);
 
   const periodIncome = useMemo(() => {
     if (!stats) return 0;
@@ -49,11 +57,17 @@ export default function Dashboard() {
 
   const dayTotal = useMemo(() => dayPayments.reduce((sum, p) => sum + p.contributedAmount, 0), [dayPayments]);
 
+  const money = (n: number, fractionDigits?: number) => (privacyMode ? maskCurrency(n, fractionDigits) : formatCurrency(n, fractionDigits));
+  const num = (n: number) => (privacyMode ? maskNumber(n) : String(n));
+
   const periods: Period[] = ['today', 'week', 'month', 'year'];
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+    headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    headerTexts: { flex: 1 },
+    privacyBtn: { padding: 8, borderRadius: 10, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
     greeting: { fontSize: 24, fontWeight: '800', color: colors.text },
     subtitle: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
     statsGrid: { paddingHorizontal: 16, gap: 8 },
@@ -94,26 +108,33 @@ export default function Dashboard() {
 
   const onRefresh = async () => { setRefreshing(true); await loadData(); setRefreshing(false); };
 
-  if (!stats) return <LoadingScreen />;
+  if (!stats || !privacyReady) return <LoadingScreen />;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>{t('dashboard.title')}</Text>
-        <Text style={styles.subtitle}>{t('dashboard.subtitle')}</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.headerTexts}>
+            <Text style={styles.greeting}>{t('dashboard.title')}</Text>
+            <Text style={styles.subtitle}>{t('dashboard.subtitle')}</Text>
+          </View>
+          <TouchableOpacity style={styles.privacyBtn} onPress={togglePrivacyMode} accessibilityLabel={t(privacyMode ? 'dashboard.showValues' : 'dashboard.hideValues')} hitSlop={8}>
+            <Ionicons name={privacyMode ? 'eye-off-outline' : 'eye-outline'} size={22} color={privacyMode ? colors.primary : colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('dashboard.sectionTotals')}</Text>
         <View style={styles.statsGrid}>
           <View style={styles.totalsRow}>
-            <StatCard title={t('dashboard.totalClients')} value={stats.totalClients} icon="people-outline" color={colors.primary} />
-            <StatCard title={t('dashboard.totalCollections')} value={stats.totalCollections} icon="folder-open-outline" color={colors.primary} />
-            <StatCard title={t('dashboard.totalPayments')} value={stats.totalPayments} icon="cash-outline" color={colors.primary} />
+            <StatCard title={t('dashboard.totalClients')} value={num(stats.totalClients)} icon="people-outline" color={colors.primary} />
+            <StatCard title={t('dashboard.totalCollections')} value={num(stats.totalCollections)} icon="folder-open-outline" color={colors.primary} />
+            <StatCard title={t('dashboard.totalPayments')} value={num(stats.totalPayments)} icon="cash-outline" color={colors.primary} />
           </View>
           <View style={styles.totalsRow}>
-            <StatCard title={t('dashboard.activeClients')} value={stats.activeClients} icon="person-outline" color={colors.warning} />
-            <StatCard title={t('dashboard.activeCollections')} value={stats.activeCollections} icon="folder-outline" color={colors.primary} />
-            <StatCard title={t('dashboard.blacklistedClients')} value={stats.blacklistedClients} icon="shield-outline" color="#e74c3c" />
+            <StatCard title={t('dashboard.activeClients')} value={num(stats.activeClients)} icon="person-outline" color={colors.warning} />
+            <StatCard title={t('dashboard.activeCollections')} value={num(stats.activeCollections)} icon="folder-outline" color={colors.primary} />
+            <StatCard title={t('dashboard.blacklistedClients')} value={num(stats.blacklistedClients)} icon="shield-outline" color="#e74c3c" />
           </View>
         </View>
       </View>
@@ -121,13 +142,13 @@ export default function Dashboard() {
         <Text style={styles.sectionTitle}>{t('dashboard.sectionFinancials')}</Text>
         <View style={styles.statsGrid}>
           <View style={styles.totalsRow}>
-            <StatCard title={t('dashboard.totalPaidOut')} value={formatCurrency(stats.totalPaidOut, 0)} icon="checkmark-circle-outline" color={colors.success} />
-            <StatCard title={t('dashboard.totalRemainder')} value={formatCurrency(stats.totalRemainder, 0)} icon="alert-circle-outline" color={colors.warning} />
-            <StatCard title={t('dashboard.totalGross')} value={formatCurrency(stats.totalPaymentsSum + stats.totalRemainder, 0)} icon="calculator-outline" color={colors.primary} />
+            <StatCard title={t('dashboard.totalPaidOut')} value={money(stats.totalPaidOut, 0)} icon="checkmark-circle-outline" color={colors.success} />
+            <StatCard title={t('dashboard.totalRemainder')} value={money(stats.totalRemainder, 0)} icon="alert-circle-outline" color={colors.warning} />
+            <StatCard title={t('dashboard.totalGross')} value={money(stats.totalPaymentsSum + stats.totalRemainder, 0)} icon="calculator-outline" color={colors.primary} />
           </View>
           <View style={styles.totalsRow}>
-            <StatCard title={t('dashboard.totalInvestment')} value={formatCurrency(stats.totalInvestment, 0)} icon="trending-down-outline" color={colors.warning} />
-            <StatCard title={t('dashboard.realEarnings')} value={formatCurrency(stats.realEarnings, 0)} icon="trending-up-outline" color={colors.success} />
+            <StatCard title={t('dashboard.totalInvestment')} value={money(stats.totalInvestment, 0)} icon="trending-down-outline" color={colors.warning} />
+            <StatCard title={t('dashboard.realEarnings')} value={money(stats.realEarnings, 0)} icon="trending-up-outline" color={colors.success} />
           </View>
         </View>
       </View>
@@ -148,16 +169,16 @@ export default function Dashboard() {
         </View>
         <View style={[styles.incomeCard, { marginTop: 10 }]}>
           <View style={styles.incomeInfo}>
-            <Text style={styles.incomeAmount}>{formatCurrency(periodIncome)}</Text>
+            <Text style={styles.incomeAmount}>{money(periodIncome)}</Text>
             <Text style={styles.incomeLabel}>{t('dashboard.totalPaidOut')}</Text>
           </View>
           <View style={[styles.incomeInfo, { paddingTop: 4 }]}>
-            <Text style={[styles.incomeAmount, { fontSize: 18, color: colors.success }]}>{formatCurrency(periodEarnings)}</Text>
+            <Text style={[styles.incomeAmount, { fontSize: 18, color: colors.success }]}>{money(periodEarnings)}</Text>
             <Text style={styles.incomeLabel}>{t('dashboard.realEarnings')}</Text>
           </View>
         </View>
         <View style={[styles.incomeCard, { marginTop: 8 }]}>
-          <IncomeChart data={chartData} />
+          <IncomeChart data={chartData} hidden={privacyMode} />
         </View>
         {period === 'today' && (
           <View style={styles.dayListCard}>
@@ -172,12 +193,12 @@ export default function Dashboard() {
                       <Text style={styles.dayRowClient} numberOfLines={1}>{p.clientName}</Text>
                       <Text style={styles.dayRowSub} numberOfLines={1}>{p.productName} · {t('payment.installment', { number: p.installmentNumber })}</Text>
                     </View>
-                    <Text style={styles.dayRowAmount}>{formatCurrency(p.contributedAmount)}</Text>
+                    <Text style={styles.dayRowAmount}>{money(p.contributedAmount)}</Text>
                   </TouchableOpacity>
                 ))}
                 <View style={styles.dayTotalRow}>
                   <Text style={styles.dayTotalLabel}>{t('collection.total')}</Text>
-                  <Text style={styles.dayTotalValue}>{formatCurrency(dayTotal)}</Text>
+                  <Text style={styles.dayTotalValue}>{money(dayTotal)}</Text>
                 </View>
               </>
             )}
