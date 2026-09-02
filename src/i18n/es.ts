@@ -67,6 +67,7 @@ const es: Translation = {
   'dashboard.week': 'Semana',
   'dashboard.month': 'Mes',
   'dashboard.year': 'Año',
+  'dashboard.paymentsOnDay': 'Pagos del {date}',
 
   'clients.title': 'Clientes',
   'clients.searchPlaceholder': 'Buscar clientes...',

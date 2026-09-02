@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useMemo, useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatCard from '../../components/StatCard';
 import LoadingScreen from '../../components/LoadingScreen';
@@ -9,6 +9,8 @@ import { usePaymentStore } from '../../src/stores/paymentStore';
 import { useTranslation } from '../../src/i18n';
 import { useTheme } from '../../src/theme';
 import { formatCurrency } from '../../src/utils/formatters';
+import { formatDate } from '../../src/utils/dateUtils';
+import dayjs from 'dayjs';
 
 type Period = 'today' | 'week' | 'month' | 'year';
 
@@ -16,13 +18,14 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { stats, chartData, loadDashboardStats, loadChartData } = usePaymentStore();
+  const { stats, chartData, dayPayments, loadDashboardStats, loadChartData, loadDayPayments } = usePaymentStore();
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState<Period>('month');
 
   useEffect(() => {
     loadChartData(period);
-  }, [period, loadChartData]);
+    if (period === 'today') loadDayPayments(dayjs().format('YYYY-MM-DD'));
+  }, [period, loadChartData, loadDayPayments]);
 
   const periodIncome = useMemo(() => {
     if (!stats) return 0;
@@ -43,6 +46,8 @@ export default function Dashboard() {
       case 'year': return stats.yearEarnings;
     }
   }, [period, stats]);
+
+  const dayTotal = useMemo(() => dayPayments.reduce((sum, p) => sum + p.contributedAmount, 0), [dayPayments]);
 
   const periods: Period[] = ['today', 'week', 'month', 'year'];
 
@@ -66,12 +71,24 @@ export default function Dashboard() {
     pickerText: { fontSize: 12, fontWeight: '600' },
     pickerTextActive: { color: '#fff' },
     pickerTextInactive: { color: colors.textSecondary },
+    dayListCard: { backgroundColor: colors.card, marginHorizontal: 16, marginTop: 8, borderRadius: 12, paddingVertical: 4, overflow: 'hidden' as const },
+    dayListTitle: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 2, textTransform: 'uppercase' as const },
+    dayRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, gap: 12 },
+    dayRowInfo: { flex: 1 },
+    dayRowClient: { fontSize: 14, fontWeight: '600', color: colors.text },
+    dayRowSub: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },
+    dayRowAmount: { fontSize: 14, fontWeight: '700', color: colors.success },
+    dayTotalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.textTertiary + '44', paddingHorizontal: 14, paddingVertical: 10, marginTop: 4 },
+    dayTotalLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    dayTotalValue: { fontSize: 15, fontWeight: '800', color: colors.text },
+    emptyPayments: { fontSize: 13, color: colors.textSecondary, textAlign: 'center', paddingVertical: 16 },
   }), [colors]);
 
   const loadData = useCallback(async () => {
     await loadDashboardStats();
     await loadChartData(period);
-  }, [loadDashboardStats, loadChartData, period]);
+    if (period === 'today') await loadDayPayments(dayjs().format('YYYY-MM-DD'));
+  }, [loadDashboardStats, loadChartData, loadDayPayments, period]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
@@ -142,6 +159,30 @@ export default function Dashboard() {
         <View style={[styles.incomeCard, { marginTop: 8 }]}>
           <IncomeChart data={chartData} />
         </View>
+        {period === 'today' && (
+          <View style={styles.dayListCard}>
+            <Text style={styles.dayListTitle}>{t('dashboard.paymentsOnDay', { date: formatDate(dayjs().format('YYYY-MM-DD')) })}</Text>
+            {dayPayments.length === 0 ? (
+              <Text style={styles.emptyPayments}>{t('common.noData')}</Text>
+            ) : (
+              <>
+                {dayPayments.map((p) => (
+                  <TouchableOpacity key={p.id} style={styles.dayRow} onPress={() => router.push(`/payments/edit/${p.id}`)}>
+                    <View style={styles.dayRowInfo}>
+                      <Text style={styles.dayRowClient} numberOfLines={1}>{p.clientName}</Text>
+                      <Text style={styles.dayRowSub} numberOfLines={1}>{p.productName} · {t('payment.installment', { number: p.installmentNumber })}</Text>
+                    </View>
+                    <Text style={styles.dayRowAmount}>{formatCurrency(p.contributedAmount)}</Text>
+                  </TouchableOpacity>
+                ))}
+                <View style={styles.dayTotalRow}>
+                  <Text style={styles.dayTotalLabel}>{t('collection.total')}</Text>
+                  <Text style={styles.dayTotalValue}>{formatCurrency(dayTotal)}</Text>
+                </View>
+              </>
+            )}
+          </View>
+        )}
       </View>
     </ScrollView>
   );
