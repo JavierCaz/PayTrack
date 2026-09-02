@@ -14,6 +14,19 @@ export function formatCurrencyShort(amount: number): string {
   return formatCurrency(amount);
 }
 
+function maskDigits(value: string): string {
+  return value.replace(/\d/g, '•');
+}
+
+export function maskCurrency(amount: number, fractionDigits: number = 2): string {
+  return maskDigits(formatCurrency(amount, fractionDigits));
+}
+
+export function maskNumber(value: number | string): string {
+  const digits = String(value).replace(/\D/g, '');
+  return '•'.repeat(Math.max(digits.length, 1));
+}
+
 export function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\D/g, '');
   if (cleaned.length === 10) {

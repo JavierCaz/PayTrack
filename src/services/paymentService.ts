@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { dbQuery, withTransaction, type SQLiteDatabase } from '../database/database';
-import { Payment as PaymentRow, generateId, nowISO, type IncomeDataPoint } from '../types';
+import { Payment as PaymentRow, generateId, nowISO, type DayPayment, type IncomeDataPoint } from '../types';
 import { _updateCollectionStatus } from './collectionService';
 import { getSetting } from './settingsService';
 
@@ -307,5 +307,37 @@ export async function getIncomeChartData(period: 'today' | 'week' | 'month' | 'y
       amount: bucket.amount,
       earnings: computeEarnings(bucket.detailRows, globalRate),
     }));
+  });
+}
+
+export async function getDayPayments(date: string): Promise<DayPayment[]> {
+  return dbQuery(async (db) => {
+    const rows = await db.getAllAsync<any>(
+      `SELECT p.id, p.collection_id, p.installment_number, p.paid_date, p.paid_amount, p.notes,
+              c.product_name, c.conversion_rate,
+              cl.name as client_name
+       FROM payments p
+       JOIN collections c ON c.id = p.collection_id
+       JOIN clients cl ON cl.id = c.client_id
+       WHERE p.paid_date = ?
+       ORDER BY p.created_at ASC`
+      , [date]
+    );
+    return rows.map((row) => {
+      const paidAmount = row.paid_amount ?? 0;
+      const conversionRate = row.conversion_rate ?? 1;
+      return {
+        id: row.id,
+        collectionId: row.collection_id,
+        installmentNumber: row.installment_number,
+        paidDate: row.paid_date,
+        paidAmount,
+        conversionRate,
+        contributedAmount: paidAmount * conversionRate,
+        notes: row.notes || '',
+        clientName: row.client_name || '',
+        productName: row.product_name || '',
+      };
+    });
   });
 }

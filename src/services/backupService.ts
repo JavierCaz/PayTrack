@@ -1,7 +1,7 @@
 import { withTransaction } from '../database/database';
 import { Paths, File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { generateId, nowISO } from '../types';
 import { t } from '../i18n';
 
@@ -33,6 +33,27 @@ function safeNum(val: any, fallback: number = 0): number {
 
 function safeStr(val: any, fallback: string = ''): string {
   return String(val ?? fallback);
+}
+
+async function readJsonFile(uri: string): Promise<string> {
+  if (Platform.OS === 'web') {
+    const response = await fetch(uri);
+    return response.text();
+  }
+  const file = new File(uri);
+  return file.text();
+}
+
+function triggerBrowserDownload(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function importExternalFormat(data: any): Promise<void> {
@@ -131,6 +152,12 @@ export async function exportBackup(): Promise<void> {
 
     const json = JSON.stringify(backup, null, 2);
     const filename = `paytrack_backup_${new Date().toISOString().split('T')[0]}.json`;
+    if (Platform.OS === 'web') {
+      triggerBrowserDownload(json, filename);
+      Alert.alert(t('backup.exportSuccess'), t('backup.exportSavedTo', { path: filename }));
+      return;
+    }
+
     const file = new File(Paths.document, filename);
     const writer = file.writableStream().getWriter();
     await writer.write(new TextEncoder().encode(json));
@@ -153,8 +180,7 @@ export async function exportBackup(): Promise<void> {
 
 export async function importBackup(uri: string): Promise<void> {
   try {
-    const file = new File(uri);
-    const text = await file.text();
+    const text = await readJsonFile(uri);
     const data = JSON.parse(text);
 
     // Detect external format (from another app) - has "clientes" array

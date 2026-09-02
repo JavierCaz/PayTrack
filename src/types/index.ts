@@ -114,6 +114,19 @@ export interface IncomeDataPoint {
   earnings: number;
 }
 
+export interface DayPayment {
+  id: string;
+  collectionId: string;
+  installmentNumber: number;
+  paidDate: string;
+  paidAmount: number;
+  conversionRate: number;
+  contributedAmount: number; // paidAmount * conversionRate — matches dashboard income totals
+  notes: string;
+  clientName: string;
+  productName: string;
+}
+
 export interface MonthlyIncome {
   month: string;
   amount: number;

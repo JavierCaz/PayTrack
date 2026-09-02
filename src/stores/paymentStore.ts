@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Payment, IncomeDataPoint } from '../types';
+import { Payment, IncomeDataPoint, DayPayment } from '../types';
 import * as paymentService from '../services/paymentService';
 
 type Period = 'today' | 'week' | 'month' | 'year';
@@ -40,6 +40,8 @@ interface PaymentState {
   deletePayment: (paymentId: string) => Promise<void>;
   loadDashboardStats: () => Promise<void>;
   loadChartData: (period: Period) => Promise<void>;
+  dayPayments: DayPayment[];
+  loadDayPayments: (date: string) => Promise<void>;
 }
 
 export const usePaymentStore = create<PaymentState>((set) => ({
@@ -47,6 +49,7 @@ export const usePaymentStore = create<PaymentState>((set) => ({
   loading: false,
   stats: null,
   chartData: [],
+  dayPayments: [],
 
   loadPayments: async (collectionId) => {
     set({ loading: true });
@@ -90,6 +93,15 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       set({ chartData });
     } catch (error) {
       console.error('Failed to load chart data:', error);
+    }
+  },
+
+  loadDayPayments: async (date) => {
+    try {
+      const dayPayments = await paymentService.getDayPayments(date);
+      set({ dayPayments });
+    } catch (error) {
+      console.error('Failed to load day payments:', error);
     }
   },
 }));
