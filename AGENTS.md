@@ -1,6 +1,6 @@
 # AGENTS.md
 
-PayTrack: offline-first React Native app (Expo SDK 54, React 19 / RN 0.81) for tracking installment payments and collections. Stack: expo-router (file-based routing), TypeScript (strict), Zustand, expo-sqlite, dayjs. No backend, no env vars, no tests.
+PayTrack: offline-first React Native app (Expo SDK 57, React 19.2 / RN 0.86) for tracking installment payments and collections. Stack: expo-router (file-based routing), TypeScript (strict), Zustand, expo-sqlite, dayjs. No backend, no env vars, no tests.
 
 ## Commands
 
