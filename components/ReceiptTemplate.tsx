@@ -38,7 +38,7 @@ export default function ReceiptTemplate({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{mode === 'collection' ? t('receipt.collectionReceipt') : t('receipt.paymentReceipt')}</Text>
-        <Text style={styles.receiptNo}>{t('receipt.receiptNo', { number: receiptNumber || `${Date.now()}` })}</Text>
+        <Text style={styles.receiptNo}>{t('receipt.receiptNo', { number: receiptNumber ?? '' })}</Text>
       </View>
 
       <View style={styles.divider} />

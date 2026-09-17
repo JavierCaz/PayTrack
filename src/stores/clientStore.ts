@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { Client } from '../types';
 import * as clientService from '../services/clientService';
+import { Client } from '../types';
 
 interface ClientState {
   clients: clientService.ClientWithTotal[];
@@ -45,7 +45,7 @@ export const useClientStore = create<ClientState>((set, get) => {
   allClients: [],
   loading: false,
   searchQuery: '',
-  filterStatus: 'all',
+  filterStatus: 'active',
 
   setSearchQuery: (query) => {
     set({ searchQuery: query });

@@ -1,6 +1,6 @@
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import * as MediaLibrary from 'expo-media-library';
+import * as MediaLibrary from 'expo-media-library/legacy';
 import { Alert } from 'react-native';
 import { t } from '../i18n';
 

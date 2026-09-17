@@ -9,8 +9,8 @@ import FilterChips from '../../components/FilterChips';
 import LoadingScreen from '../../components/LoadingScreen';
 import SearchBar from '../../components/SearchBar';
 import { useTranslation } from '../../src/i18n';
-import { useClientStore } from '../../src/stores/clientStore';
 import { getSetting } from '../../src/services/settingsService';
+import { useClientStore } from '../../src/stores/clientStore';
 import { useTheme } from '../../src/theme';
 
 export default function ClientsScreen() {
@@ -20,10 +20,10 @@ export default function ClientsScreen() {
 
   const insets = useSafeAreaInsets();
   const filterOptions = useMemo(() => [
-    { label: t('clients.filterAll'), value: 'all' },
-    { label: t('clients.filterPending'), value: 'pending' },
     { label: t('clients.filterActive'), value: 'active' },
+    { label: t('clients.filterPending'), value: 'pending' },
     { label: t('clients.filterSettled'), value: 'settled' },
+    { label: t('clients.filterAll'), value: 'all' },
     { label: t('clients.filterBlacklist'), value: 'blacklist' },
   ], [t]);
   const [refreshing, setRefreshing] = useState(false);

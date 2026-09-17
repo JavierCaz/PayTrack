@@ -18,7 +18,7 @@ PayTrack helps you manage clients, create installment plans, record payments, an
 
 ## Tech Stack
 
-- **Framework:** React Native with [Expo SDK 54](https://docs.expo.dev/)
+- **Framework:** React Native with [Expo SDK 57](https://docs.expo.dev/)
 - **Language:** TypeScript
 - **Routing:** [expo-router](https://docs.expo.dev/router/introduction/) (file-based routing)
 - **State Management:** [Zustand](https://github.com/pmndrs/zustand)
