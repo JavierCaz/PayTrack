@@ -1,7 +1,8 @@
 import { withTransaction } from '../database/database';
 import { Paths, File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { showAlert } from '../stores/alertStore';
 import { generateId, nowISO } from '../types';
 import { t } from '../i18n';
 
@@ -154,7 +155,7 @@ export async function exportBackup(): Promise<void> {
     const filename = `paytrack_backup_${new Date().toISOString().split('T')[0]}.json`;
     if (Platform.OS === 'web') {
       triggerBrowserDownload(json, filename);
-      Alert.alert(t('backup.exportSuccess'), t('backup.exportSavedTo', { path: filename }));
+      showAlert(t('backup.exportSuccess'), t('backup.exportSavedTo', { path: filename }));
       return;
     }
 
@@ -170,11 +171,11 @@ export async function exportBackup(): Promise<void> {
         dialogTitle: t('backup.exportSuccess'),
       });
     } else {
-      Alert.alert(t('backup.exportSuccess'), t('backup.exportSavedTo', { path: file.uri }));
+      showAlert(t('backup.exportSuccess'), t('backup.exportSavedTo', { path: file.uri }));
     }
   } catch (error) {
     console.error('Failed to export backup:', error);
-    Alert.alert(t('common.error'), t('backup.exportFailed'));
+    showAlert(t('common.error'), t('backup.exportFailed'));
   }
 }
 
@@ -186,14 +187,14 @@ export async function importBackup(uri: string): Promise<void> {
     // Detect external format (from another app) - has "clientes" array
     if (data.clientes && Array.isArray(data.clientes)) {
       await importExternalFormat(data);
-      Alert.alert(t('common.success'), t('backup.importExternalSuccess'));
+      showAlert(t('common.success'), t('backup.importExternalSuccess'));
       return;
     }
 
     // Our own format
     const backup = data as BackupData;
     if (!backup.version || !backup.clients || !backup.collections || !backup.payments) {
-      Alert.alert(t('backup.invalidFile'), t('backup.invalidFileDesc'));
+      showAlert(t('backup.invalidFile'), t('backup.invalidFileDesc'));
       return;
     }
 
@@ -228,9 +229,9 @@ export async function importBackup(uri: string): Promise<void> {
         );
       }
     });
-    Alert.alert(t('common.success'), t('backup.importSuccess'));
+    showAlert(t('common.success'), t('backup.importSuccess'));
   } catch (error) {
     console.error('Failed to import backup:', error);
-    Alert.alert(t('common.error'), t('backup.importFailed'));
+    showAlert(t('common.error'), t('backup.importFailed'));
   }
 }

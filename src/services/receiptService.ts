@@ -1,7 +1,7 @@
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library/legacy';
-import { Alert } from 'react-native';
+import { showAlert } from '../stores/alertStore';
 import { t } from '../i18n';
 
 export async function captureReceipt(viewRef: React.RefObject<any>): Promise<string | null> {
@@ -22,7 +22,7 @@ export async function shareReceipt(viewRef: React.RefObject<any>): Promise<void>
   try {
     const uri = await captureReceipt(viewRef);
     if (!uri) {
-      Alert.alert(t('common.error'), t('receipt.generateError'));
+      showAlert(t('common.error'), t('receipt.generateError'));
       return;
     }
     const isAvailable = await Sharing.isAvailableAsync();
@@ -32,11 +32,11 @@ export async function shareReceipt(viewRef: React.RefObject<any>): Promise<void>
         dialogTitle: t('receipt.title'),
       });
     } else {
-      Alert.alert(t('receipt.sharingNotAvailableTitle'), t('receipt.sharingNotAvailable'));
+      showAlert(t('receipt.sharingNotAvailableTitle'), t('receipt.sharingNotAvailable'));
     }
   } catch (error) {
     console.error('Failed to share receipt:', error);
-    Alert.alert(t('common.error'), t('receipt.shareError'));
+    showAlert(t('common.error'), t('receipt.shareError'));
   }
 }
 
@@ -44,18 +44,18 @@ export async function saveReceiptToGallery(viewRef: React.RefObject<any>): Promi
   try {
     const { status } = await MediaLibrary.requestPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(t('receipt.permissionNeeded'), t('receipt.permissionDesc'));
+      showAlert(t('receipt.permissionNeeded'), t('receipt.permissionDesc'));
       return;
     }
     const uri = await captureReceipt(viewRef);
     if (!uri) {
-      Alert.alert(t('common.error'), t('receipt.generateError'));
+      showAlert(t('common.error'), t('receipt.generateError'));
       return;
     }
     await MediaLibrary.saveToLibraryAsync(uri);
-    Alert.alert(t('common.success'), t('receipt.saveSuccess'));
+    showAlert(t('common.success'), t('receipt.saveSuccess'));
   } catch (error) {
     console.error('Failed to save receipt:', error);
-    Alert.alert(t('common.error'), t('receipt.saveFailed'));
+    showAlert(t('common.error'), t('receipt.saveFailed'));
   }
 }

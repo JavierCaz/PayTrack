@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { showAlert } from '../../src/stores/alertStore';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useClientStore } from '../../src/stores/clientStore';
@@ -63,13 +64,13 @@ export default function NewClientScreen() {
   };
 
   const handleSave = async () => {
-    if (!name.trim()) { Alert.alert(t('common.required'), t('clients.nameRequired')); return; }
+    if (!name.trim()) { showAlert(t('common.required'), t('clients.nameRequired')); return; }
     setSaving(true);
     try {
       await addClient({ name: name.trim(), phone: phone.trim(), email: email.trim(), notes: notes.trim(), defaultRecurrence: buildDefaultRecurrence() });
       router.back();
     }
-    catch { Alert.alert(t('common.error'), t('clients.saveFailed')); }
+    catch { showAlert(t('common.error'), t('clients.saveFailed')); }
     finally { setSaving(false); }
   };
 

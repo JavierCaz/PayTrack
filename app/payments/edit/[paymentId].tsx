@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect  } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { showAlert } from '../../../src/stores/alertStore';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DatePickerField from '../../../components/DatePickerField';
@@ -57,22 +58,22 @@ export default function EditPaymentScreen() {
   }, [paymentId, getPayment]);
 
   const handleSave = async () => {
-    if (!paidAmount || parseFloat(paidAmount) <= 0) { Alert.alert(t('common.required'), t('payment.enterValidAmount')); return; }
-    if (!paidDate) { Alert.alert(t('common.required'), t('payment.enterDate')); return; }
+    if (!paidAmount || parseFloat(paidAmount) <= 0) { showAlert(t('common.required'), t('payment.enterValidAmount')); return; }
+    if (!paidDate) { showAlert(t('common.required'), t('payment.enterDate')); return; }
     setSaving(true);
     try {
       await updatePayment(paymentId!, { paidAmount: parseFloat(paidAmount), paidDate, notes: notes.trim() || undefined });
-      Alert.alert(t('common.success'), t('payment.paidSuccess'), [{ text: t('common.done'), onPress: () => router.back() }]);
-    } catch { Alert.alert(t('common.error'), t('payment.updateFailed')); }
+      showAlert(t('common.success'), t('payment.paidSuccess'), [{ text: t('common.done'), onPress: () => router.back() }]);
+    } catch { showAlert(t('common.error'), t('payment.updateFailed')); }
     finally { setSaving(false); }
   };
 
   const handleDelete = () => {
-    Alert.alert(t('common.delete'), t('payment.deleteConfirm'), [
+    showAlert(t('common.delete'), t('payment.deleteConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('common.delete'), style: 'destructive', onPress: async () => {
-        try { await deletePayment(paymentId!); Alert.alert(t('common.success'), t('payment.deleteSuccess')); router.back(); }
-        catch { Alert.alert(t('common.error'), t('payment.deleteFailed')); }
+        try { await deletePayment(paymentId!); showAlert(t('common.success'), t('payment.deleteSuccess')); router.back(); }
+        catch { showAlert(t('common.error'), t('payment.deleteFailed')); }
       }},
     ]);
   };

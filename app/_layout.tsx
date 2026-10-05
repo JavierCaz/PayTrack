@@ -8,6 +8,7 @@ import type { Locale } from '../src/i18n';
 import { ThemeProvider, useTheme } from '../src/theme';
 import { initDatabase, startDbKeepAlive, stopDbKeepAlive } from '../src/database/database';
 import { getSetting, setSetting } from '../src/services/settingsService';
+import AlertHost from '../components/AlertHost';
 
 function RootLayoutInner() {
   const { t } = useTranslation();
@@ -107,6 +108,7 @@ function RootLayoutInner() {
         <Stack.Screen name="receipts/collection/[collectionId]" options={{ headerShown: true, headerTitle: t('receipt.collectionReceiptTitle'), headerTintColor: headerTint, headerStyle: { backgroundColor: colors.headerBg } }} />
         <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: t('settings.title'), headerTintColor: headerTint, headerStyle: { backgroundColor: colors.headerBg } }} />
       </Stack>
+      <AlertHost />
     </>
   );
 }

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { showAlert } from '../../src/stores/alertStore';
 import CollectionCard from '../../components/CollectionCard';
 import EmptyState from '../../components/EmptyState';
 import LoadingScreen from '../../components/LoadingScreen';
@@ -115,7 +116,7 @@ export default function ClientDetailScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert(t('clients.deleteConfirm'), t('clients.deleteWarning'), [
+    showAlert(t('clients.deleteConfirm'), t('clients.deleteWarning'), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('common.delete'), style: 'destructive', onPress: async () => { if (!id) return; await deleteClient(id); router.back(); } },
     ]);

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { showAlert } from '../../src/stores/alertStore';
 import EmptyState from '../../components/EmptyState';
 import LoadingScreen from '../../components/LoadingScreen';
 import PaymentItem from '../../components/PaymentItem';
@@ -63,7 +64,7 @@ export default function CollectionDetailScreen() {
   const onRefresh = async () => { setRefreshing(true); await loadData(); setRefreshing(false); };
 
   const handleDelete = () => {
-    Alert.alert(t('common.delete'), t('collection.deleteWarning'), [
+    showAlert(t('common.delete'), t('collection.deleteWarning'), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('common.delete'), style: 'destructive', onPress: async () => { if (!id) return; await deleteCollection(id); router.back(); } },
     ]);

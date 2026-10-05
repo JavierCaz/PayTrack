@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { showAlert } from '../../../src/stores/alertStore';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DatePickerField from '../../../components/DatePickerField';
@@ -91,23 +92,23 @@ export default function EditCollectionScreen() {
   const buildRecurrence = (): RecurrenceConfig | null => {
     if (recurrenceType === 'monthly') {
       const days = monthDays.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d > 0 && d <= 31);
-      if (days.length === 0) { Alert.alert(t('common.error'), t('collection.paymentDaysError')); return null; }
+      if (days.length === 0) { showAlert(t('common.error'), t('collection.paymentDaysError')); return null; }
       return { type: 'monthly', monthDays: days, weekDays: [], monthWeekday: [] };
     }
     if (recurrenceType === 'weekly') {
-      if (weekDay === null) { Alert.alert(t('common.error'), t('collection.paymentDaysError')); return null; }
+      if (weekDay === null) { showAlert(t('common.error'), t('collection.paymentDaysError')); return null; }
       return { type: 'weekly', monthDays: [], weekDays: [weekDay], monthWeekday: [] };
     }
     return { type: 'monthly_weekday', monthDays: [], weekDays: [], monthWeekday: [monthWeekday] };
   };
 
   const handleSave = async () => {
-    if (!productName.trim()) { Alert.alert(t('common.required'), t('collection.productRequired')); return; }
-    if (!totalPrice || parseFloat(totalPrice) <= 0) { Alert.alert(t('common.required'), t('collection.priceRequired')); return; }
-    if (!numInstallments || parseInt(numInstallments) <= 0) { Alert.alert(t('common.required'), t('collection.installmentsRequired')); return; }
-    if (!conversionRate || parseFloat(conversionRate) <= 0) { Alert.alert(t('common.required'), t('collection.conversionRateRequired')); return; }
-    if (!startDate.trim()) { Alert.alert(t('common.required'), t('collection.startDateRequired')); return; }
-    if (!interestRate || parseFloat(interestRate) < 0) { Alert.alert(t('common.required'), t('collection.interestRateRequired')); return; }
+    if (!productName.trim()) { showAlert(t('common.required'), t('collection.productRequired')); return; }
+    if (!totalPrice || parseFloat(totalPrice) <= 0) { showAlert(t('common.required'), t('collection.priceRequired')); return; }
+    if (!numInstallments || parseInt(numInstallments) <= 0) { showAlert(t('common.required'), t('collection.installmentsRequired')); return; }
+    if (!conversionRate || parseFloat(conversionRate) <= 0) { showAlert(t('common.required'), t('collection.conversionRateRequired')); return; }
+    if (!startDate.trim()) { showAlert(t('common.required'), t('collection.startDateRequired')); return; }
+    if (!interestRate || parseFloat(interestRate) < 0) { showAlert(t('common.required'), t('collection.interestRateRequired')); return; }
     if (!id) return;
     const recurrence = buildRecurrence();
     if (!recurrence) return;
@@ -121,8 +122,8 @@ export default function EditCollectionScreen() {
         recurrence, startDate,
         installmentAmount: installmentAmount ? parseFloat(installmentAmount) : null,
       });
-      Alert.alert(t('common.success'), t('collection.updated'), [{ text: t('common.done'), onPress: () => router.back() }]);
-    } catch { Alert.alert(t('common.error'), t('collection.updateFailed')); }
+      showAlert(t('common.success'), t('collection.updated'), [{ text: t('common.done'), onPress: () => router.back() }]);
+    } catch { showAlert(t('common.error'), t('collection.updateFailed')); }
     finally { setSaving(false); }
   };
 

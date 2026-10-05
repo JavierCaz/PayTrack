@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { showAlert } from '../../../src/stores/alertStore';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DatePickerField from '../../../components/DatePickerField';
@@ -50,15 +51,15 @@ export default function RecordPaymentScreen() {
   }, [collectionId, getCollection]);
 
   const handleRecord = async () => {
-    if (!paidAmount || parseFloat(paidAmount) <= 0) { Alert.alert(t('common.required'), t('payment.enterValidAmount')); return; }
+    if (!paidAmount || parseFloat(paidAmount) <= 0) { showAlert(t('common.required'), t('payment.enterValidAmount')); return; }
     setSaving(true);
     try {
       const paymentId = await recordPayment(collectionId!, parseFloat(paidAmount), paidDate, notes.trim() || undefined);
-      Alert.alert(t('common.success'), t('payment.paidSuccess'), [
+      showAlert(t('common.success'), t('payment.paidSuccess'), [
         { text: t('payment.viewReceipt'), onPress: () => router.replace(`/receipts/${paymentId}`) },
         { text: t('common.done'), style: 'cancel', onPress: () => router.back() },
       ]);
-    } catch { Alert.alert(t('common.error'), t('payment.paidFailed')); }
+    } catch { showAlert(t('common.error'), t('payment.paidFailed')); }
     finally { setSaving(false); }
   };
 
