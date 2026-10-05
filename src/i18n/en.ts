@@ -8,6 +8,7 @@ const en = {
   'common.delete': 'Delete',
   'common.retry': 'Retry',
   'common.done': 'Done',
+  'common.ok': 'OK',
   'common.back': 'Go Back',
   'common.save': 'Save',
   'common.update': 'Update',

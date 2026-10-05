@@ -10,6 +10,7 @@ const es: Translation = {
   'common.delete': 'Eliminar',
   'common.retry': 'Reintentar',
   'common.done': 'Listo',
+  'common.ok': 'Aceptar',
   'common.back': 'Regresar',
   'common.save': 'Guardar',
   'common.update': 'Actualizar',

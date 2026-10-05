@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as DocumentPicker from 'expo-document-picker';
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Switch, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Switch, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { showAlert } from '../src/stores/alertStore';
 import { useTranslation } from '../src/i18n';
 import { exportBackup, importBackup } from '../src/services/backupService';
 import { getSetting, setSetting } from '../src/services/settingsService';
@@ -56,6 +58,7 @@ export default function SettingsScreen() {
   };
 
   return (
+    <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
@@ -130,14 +133,14 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.eraseAll')}</Text>
           <TouchableOpacity style={styles.option} onPress={() => {
-            Alert.alert(t('settings.eraseAll'), t('settings.eraseConfirm'), [
+            showAlert(t('settings.eraseAll'), t('settings.eraseConfirm'), [
               { text: t('common.cancel'), style: 'cancel' },
               { text: t('common.delete'), style: 'destructive', onPress: async () => {
                 try {
                   const { clearAllData } = await import('../src/services/backupService');
                   await clearAllData();
-                  Alert.alert(t('common.success'), t('settings.eraseDone'));
-                } catch (e) { Alert.alert(t('common.error'), String(e)); }
+                  showAlert(t('common.success'), t('settings.eraseDone'));
+                } catch (e) { showAlert(t('common.error'), String(e)); }
               }},
             ]);
           }}>
@@ -155,8 +158,8 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
         <View style={styles.option}>
-          <View style={[styles.iconBox, { backgroundColor: colors.chipBg }]}>
-            <Ionicons name="information-circle-outline" size={24} color={colors.textTertiary} />
+          <View style={[styles.iconBox, { backgroundColor: colors.fabBg }]}>
+            <Image source={require('../assets/images/logo.png')} style={{ width: 40, height: 40 }} contentFit="contain" />
           </View>
           <View style={styles.optionInfo}>
             <Text style={styles.optionTitle}>PayTrack</Text>
@@ -242,14 +245,17 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
-      <Modal visible={importing} transparent animationType="fade">
-        <View style={styles.overlay}>
+    </ScrollView>
+      {/* Inline overlay, not a Modal: importBackup shows an alert (itself a Modal) before this hides,
+          and on iOS dismissing a Modal also dismisses any Modal presented above it. */}
+      {importing && (
+        <View style={[StyleSheet.absoluteFill, styles.overlay]}>
           <View style={styles.overlayBox}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.overlayText}>{t('common.loading')}</Text>
           </View>
         </View>
-      </Modal>
-    </ScrollView>
+      )}
+    </View>
   );
 }
