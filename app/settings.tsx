@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as DocumentPicker from 'expo-document-picker';
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Switch, ActivityIndicator, Modal, ScrollView } from 'react-native';
 import { useTranslation } from '../src/i18n';
@@ -155,8 +156,8 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
         <View style={styles.option}>
-          <View style={[styles.iconBox, { backgroundColor: colors.chipBg }]}>
-            <Ionicons name="information-circle-outline" size={24} color={colors.textTertiary} />
+          <View style={[styles.iconBox, { backgroundColor: colors.fabBg }]}>
+            <Image source={require('../assets/images/logo.png')} style={{ width: 40, height: 40 }} contentFit="contain" />
           </View>
           <View style={styles.optionInfo}>
             <Text style={styles.optionTitle}>PayTrack</Text>
